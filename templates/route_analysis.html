@@ -94,6 +94,88 @@
     .bg-spd {
         background-color: var(--spd-red) !important;
     }
+
+    /* Mobile Optimierungen */
+    @media (max-width: 768px) {
+        .analysis-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            height: 250px;
+        }
+
+        .metric-badge {
+            display: block;
+            margin: 0.5rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .data-table {
+            font-size: 0.9rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .filter-badge {
+            display: block;
+            margin: 0.5rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .filter-section {
+            padding: 0.75rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+        }
+
+        h5 {
+            font-size: 1.1rem;
+        }
+
+        .progress {
+            height: 8px;
+        }
+    }
+
+    /* Touch-Optimierungen */
+    @media (hover: none) {
+        .filter-badge,
+        .metric-badge {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .analysis-card:hover {
+            transform: none;
+        }
+
+        .data-table tr:hover td {
+            background-color: var(--spd-white);
+        }
+    }
+
+    /* Verbesserte Tabellen-Darstellung auf Mobilgeräten */
+    @media (max-width: 576px) {
+        .data-table {
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive {
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+    }
 </style>
 {% endblock %}
 

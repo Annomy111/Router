@@ -148,6 +148,88 @@
         .fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
+
+        /* Mobile Optimierungen */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 0.75rem 1rem;
+                border-radius: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .navbar-nav .nav-link:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 1rem 10px;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .alert {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Touch-Optimierungen */
+        @media (hover: none) {
+            .navbar-nav .nav-link:hover {
+                background-color: transparent;
+                transform: none;
+            }
+
+            .btn:hover {
+                transform: none;
+            }
+
+            .card:hover {
+                transform: none;
+            }
+        }
+
+        /* Verbesserte Navigation auf Mobilgeräten */
+        @media (max-width: 576px) {
+            .navbar-collapse {
+                background-color: var(--spd-red);
+                margin: 0 -15px;
+                padding: 0 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .navbar-toggler {
+                padding: 0.4rem;
+                margin-right: 0.5rem;
+            }
+
+            .navbar-brand {
+                margin-left: 0.5rem;
+            }
+        }
+
+        /* Verbesserte Performance */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 
     {% block head %}{% endblock %}

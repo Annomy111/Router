@@ -196,6 +196,102 @@
     .leaflet-popup-content-wrapper {
         border-left: 4px solid var(--spd-red);
     }
+
+    /* Mobile Optimierungen */
+    @media (max-width: 768px) {
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress {
+            height: 20px;
+        }
+
+        .time-slot-badge {
+            display: block;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        #map {
+            height: 300px;
+        }
+
+        .route-preview {
+            height: 150px;
+        }
+
+        .highlight-box {
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .list-group-item {
+            padding: 0.75rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        h4 {
+            font-size: 1.2rem;
+        }
+
+        h5 {
+            font-size: 1.1rem;
+        }
+
+        h6 {
+            font-size: 1rem;
+        }
+
+        .lead {
+            font-size: 1rem;
+        }
+
+        .display-4 {
+            font-size: 2rem;
+        }
+    }
+
+    /* Touch-Optimierungen */
+    @media (hover: none) {
+        .btn-primary,
+        .time-slot-badge,
+        .list-group-item {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .card:hover,
+        .stats-card:hover {
+            transform: none;
+            box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        }
+
+        .list-group-item:hover {
+            transform: none;
+        }
+
+        .time-slot-badge {
+            padding: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 
