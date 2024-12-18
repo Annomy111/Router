@@ -1,5 +1,5 @@
 import json
-from app import db, WohnquartierAnalyse
+from app import app, db, WohnquartierAnalyse
 
 def import_data():
     try:
@@ -26,7 +26,8 @@ def import_data():
         db.session.rollback()
 
 if __name__ == "__main__":
-    # Erstelle die Tabellen
-    db.create_all()
-    # Importiere die Daten
-    import_data() 
+    with app.app_context():
+        # Erstelle die Tabellen
+        db.create_all()
+        # Importiere die Daten
+        import_data() 
