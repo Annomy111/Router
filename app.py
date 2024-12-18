@@ -51,9 +51,10 @@ class RouteRegistration(db.Model):
 class WohnquartierAnalyse(db.Model):
     __tablename__ = 'wohnquartier'
     
-    # Erstelle einen zusammengesetzten Primärschlüssel
-    Gemeinde = db.Column(db.String, primary_key=True)
-    Haushalte = db.Column(db.Integer, primary_key=True)  # Teil des Primärschlüssels
+    # Eigener Primärschlüssel
+    id = db.Column(db.Integer, primary_key=True)
+    Gemeinde = db.Column(db.String)
+    Haushalte = db.Column(db.Integer)
     Haushalte_zur_Miete = db.Column(db.Float)
     Haushalte_mit_Kindern = db.Column(db.Float)
     
