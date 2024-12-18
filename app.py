@@ -205,24 +205,103 @@ def map_view():
     # Erstelle Karte zentriert auf Moers
     m = folium.Map(location=[51.451, 6.626], zoom_start=11)
     
+    # Füge Cluster-Marker-Gruppe hinzu
+    marker_cluster = plugins.MarkerCluster(name="Routen")
+    m.add_child(marker_cluster)
+    
+    # Füge Layer Control hinzu
+    folium.LayerControl().add_to(m)
+    
+    # Erstelle Farbskala für Potenzial
+    def get_color(mobilization, conviction):
+        avg = (mobilization + conviction) / 2
+        if avg >= 2.5:
+            return 'darkred'
+        elif avg >= 2:
+            return 'red'
+        elif avg >= 1.5:
+            return 'orange'
+        else:
+            return 'lightred'
+    
     # Füge Marker für jede Route hinzu
     for route in routes:
-        popup_text = f"""
-            <b>{route.street} {route.house_numbers}</b><br>
-            {route.city}<br>
-            Mobilisierungsindex: {route.mobilization_index}/3<br>
-            Überzeugungsindex: {route.conviction_index}/3<br>
-            """
+        # Erstelle detaillierten Popup-Inhalt
+        popup_html = f"""
+        <div style="min-width: 200px;">
+            <h4 style="color: #E3000F; margin-bottom: 10px;">{route.street} {route.house_numbers}</h4>
+            <p style="margin-bottom: 5px;"><strong>Stadt:</strong> {route.city}</p>
+            <div style="margin: 10px 0;">
+                <div style="margin-bottom: 5px;">
+                    <strong>Mobilisierung:</strong> {route.mobilization_index}/3
+                    <div class="progress" style="height: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                        <div class="progress-bar" style="width: {(route.mobilization_index/3*100)}%; 
+                             background-color: #E3000F; border-radius: 5px;"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 5px;">
+                    <strong>Überzeugung:</strong> {route.conviction_index}/3
+                    <div class="progress" style="height: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                        <div class="progress-bar" style="width: {(route.conviction_index/3*100)}%; 
+                             background-color: #E3000F; border-radius: 5px;"></div>
+                    </div>
+                </div>
+            </div>
+        """
+        
         if route.households:
-            popup_text += f"Haushalte: {route.households}<br>"
+            popup_html += f"<p><strong>Haushalte:</strong> {route.households}</p>"
         if route.rental_percentage:
-            popup_text += f"Mietquote: {route.rental_percentage:.1f}%<br>"
+            popup_html += f"<p><strong>Mietquote:</strong> {route.rental_percentage:.1f}%</p>"
             
+        popup_html += f"""
+            <div style="margin-top: 10px;">
+                <a href="/route/{route.id}" 
+                   style="background-color: #E3000F; color: white; 
+                          padding: 5px 10px; text-decoration: none; 
+                          border-radius: 5px; display: inline-block;">
+                    Details ansehen
+                </a>
+            </div>
+        </div>
+        """
+        
+        # Erstelle Icon mit dynamischer Farbe
+        icon = folium.Icon(
+            color=get_color(route.mobilization_index, route.conviction_index),
+            icon='info-sign'
+        )
+        
+        # Füge Marker zum Cluster hinzu
         folium.Marker(
             [route.lat, route.lon],
-            popup=popup_text,
-            icon=folium.Icon(color='red', icon='info-sign')
+            popup=folium.Popup(popup_html, max_width=300),
+            tooltip=f"{route.street} ({route.city})",
+            icon=icon
+        ).add_to(marker_cluster)
+        
+        # Füge einen Kreis hinzu, um den Einzugsbereich zu visualisieren
+        folium.Circle(
+            [route.lat, route.lon],
+            radius=200,  # Radius in Metern
+            color="#E3000F",
+            fill=True,
+            fillColor="#E3000F",
+            fillOpacity=0.1
         ).add_to(m)
+    
+    # Füge Legende hinzu
+    legend_html = """
+    <div style="position: fixed; bottom: 50px; right: 50px; z-index: 1000; background-color: white;
+                padding: 10px; border: 2px solid #E3000F; border-radius: 5px;">
+        <h4 style="color: #E3000F; margin-bottom: 10px;">Legende</h4>
+        <p><i class="fa fa-circle" style="color: darkred;"></i> Sehr hohes Potenzial (≥2.5)</p>
+        <p><i class="fa fa-circle" style="color: red;"></i> Hohes Potenzial (≥2.0)</p>
+        <p><i class="fa fa-circle" style="color: orange;"></i> Mittleres Potenzial (≥1.5)</p>
+        <p><i class="fa fa-circle" style="color: lightred;"></i> Normales Potenzial (<1.5)</p>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(legend_html))
     
     return m._repr_html_()
 
@@ -292,84 +371,104 @@ def route_data():
 
 @app.route('/routen-analyse')
 def route_analysis():
-    # Hole alle Wohnquartiere mit nicht-null Haushalten
-    wohnquartiere = WohnquartierAnalyse.query.filter(WohnquartierAnalyse.Haushalte.isnot(None)).all()
-    analyzed_data = []
-    
-    # Gruppiere die Daten nach Gemeinde
-    gemeinde_data = {}
-    for wq in wohnquartiere:
-        if wq.Gemeinde not in gemeinde_data:
-            gemeinde_data[wq.Gemeinde] = {
-                'Haushalte': 0,
-                'Haushalte_zur_Miete': 0,
-                'Haushalte_mit_Kindern': 0,
-                'Anzahl': 0
-            }
+    try:
+        # Hole alle Wohnquartiere
+        wohnquartiere = WohnquartierAnalyse.query.all()
+        analyzed_data = []
         
-        gd = gemeinde_data[wq.Gemeinde]
-        gd['Haushalte'] += wq.Haushalte or 0
-        gd['Haushalte_zur_Miete'] += wq.Haushalte_zur_Miete or 0
-        gd['Haushalte_mit_Kindern'] += wq.Haushalte_mit_Kindern or 0
-        gd['Anzahl'] += 1
-    
-    # Erstelle aggregierte Analyseobjekte
-    for gemeinde, gd in gemeinde_data.items():
-        if gd['Haushalte'] > 0:
-            mietquote = (gd['Haushalte_zur_Miete'] / gd['Haushalte']) * 100
-            kinderquote = (gd['Haushalte_mit_Kindern'] / gd['Haushalte']) * 100
-            potential_score = (mietquote / 100 * 0.6) + (kinderquote / 100 * 0.4)
-            
-            data = {
-                'Gemeinde': gemeinde,
-                'Haushalte': gd['Haushalte'],
-                'Mietquote': mietquote,
-                'Kinderquote': kinderquote,
-                'potential_score': potential_score
-            }
-            analyzed_data.append(data)
-    
-    # Gruppiere nach Stadtteilen für die Übersicht
-    areas = {}
-    for data in analyzed_data:
-        area = data['Gemeinde']
-        if area not in areas:
-            areas[area] = {
-                'data': [],
-                'stats': {
-                    'total_households': 0,
-                    'avg_potential': 0,
-                    'avg_rent_quota': 0,
-                    'avg_children_quota': 0,
-                    'total_districts': 0
+        # Gruppiere die Daten nach Gemeinde
+        gemeinde_data = {}
+        for wq in wohnquartiere:
+            if not wq.Gemeinde:  # Überspringe Einträge ohne Gemeinde
+                continue
+                
+            if wq.Gemeinde not in gemeinde_data:
+                gemeinde_data[wq.Gemeinde] = {
+                    'Haushalte': 0,
+                    'Haushalte_zur_Miete': 0,
+                    'Haushalte_mit_Kindern': 0,
+                    'Mobilisierung_Sum': 0,
+                    'Ueberzeugung_Sum': 0,
+                    'Anzahl': 0
                 }
-            }
+            
+            gd = gemeinde_data[wq.Gemeinde]
+            gd['Haushalte'] += wq.Haushalte or 0
+            gd['Haushalte_zur_Miete'] += wq.Haushalte_zur_Miete or 0
+            gd['Haushalte_mit_Kindern'] += wq.Haushalte_mit_Kindern or 0
+            gd['Mobilisierung_Sum'] += wq.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
+            gd['Ueberzeugung_Sum'] += wq.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
+            gd['Anzahl'] += 1
+            
+            # Berechne Scores für einzelnes Wohnquartier
+            if wq.Haushalte and wq.Haushalte > 0:
+                mietquote = (wq.Haushalte_zur_Miete or 0) / wq.Haushalte * 100
+                kinderquote = (wq.Haushalte_mit_Kindern or 0) / wq.Haushalte * 100
+                mobilisierung = wq.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
+                ueberzeugung = wq.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
+                
+                potential_score = (
+                    (mietquote / 100 * 0.3) +  # Mietquote (30%)
+                    (kinderquote / 100 * 0.2) +  # Kinderquote (20%)
+                    (mobilisierung / 3 * 0.25) +  # Mobilisierung (25%)
+                    (ueberzeugung / 3 * 0.25)  # Überzeugung (25%)
+                ) * 3  # Skalierung auf 0-3
+                
+                analyzed_data.append({
+                    'Gemeinde': wq.Gemeinde,
+                    'Haushalte': wq.Haushalte,
+                    'Mietquote': mietquote,
+                    'Kinderquote': kinderquote,
+                    'Mobilisierung': mobilisierung,
+                    'Ueberzeugung': ueberzeugung,
+                    'potential_score': potential_score
+                })
         
-        areas[area]['data'].append(data)
-        stats = areas[area]['stats']
-        stats['total_households'] += data['Haushalte'] or 0
-        stats['avg_potential'] += data['potential_score']
-        stats['avg_rent_quota'] += data['Mietquote']
-        stats['avg_children_quota'] += data['Kinderquote']
-        stats['total_districts'] += 1
-    
-    # Berechne Durchschnitte
-    for area in areas:
-        stats = areas[area]['stats']
-        count = stats['total_districts']
-        if count > 0:
-            for key in ['avg_potential', 'avg_rent_quota', 'avg_children_quota']:
-                stats[key] /= count
-    
-    # Sortiere die Daten nach verschiedenen Kriterien
-    top_potential = sorted(analyzed_data, key=lambda x: x['potential_score'], reverse=True)
-    top_households = sorted(analyzed_data, key=lambda x: x['Haushalte'] or 0, reverse=True)
-    
-    return render_template('route_analysis.html',
-                         areas=areas,
-                         top_potential=top_potential[:10],
-                         top_households=top_households[:10],
-                         total_data=analyzed_data)
+        # Berechne Durchschnitte für jede Gemeinde
+        areas = {}
+        for gemeinde, gd in gemeinde_data.items():
+            if gd['Anzahl'] > 0:
+                areas[gemeinde] = {
+                    'data': [],
+                    'stats': {
+                        'total_households': gd['Haushalte'],
+                        'avg_rent_quota': (gd['Haushalte_zur_Miete'] / gd['Haushalte'] * 100) if gd['Haushalte'] > 0 else 0,
+                        'avg_children_quota': (gd['Haushalte_mit_Kindern'] / gd['Haushalte'] * 100) if gd['Haushalte'] > 0 else 0,
+                        'avg_mobilisierung': gd['Mobilisierung_Sum'] / gd['Anzahl'],
+                        'avg_ueberzeugung': gd['Ueberzeugung_Sum'] / gd['Anzahl'],
+                        'total_districts': gd['Anzahl']
+                    }
+                }
+                
+                # Berechne durchschnittliches Potenzial
+                areas[gemeinde]['stats']['avg_potential'] = (
+                    (areas[gemeinde]['stats']['avg_rent_quota'] / 100 * 0.3) +
+                    (areas[gemeinde]['stats']['avg_children_quota'] / 100 * 0.2) +
+                    (areas[gemeinde]['stats']['avg_mobilisierung'] / 3 * 0.25) +
+                    (areas[gemeinde]['stats']['avg_ueberzeugung'] / 3 * 0.25)
+                ) * 3
+        
+        # Sortiere die Daten
+        top_potential = sorted(analyzed_data, key=lambda x: x['potential_score'], reverse=True)
+        top_households = sorted(analyzed_data, key=lambda x: x['Haushalte'], reverse=True)
+        
+        print(f"Gefundene Gemeinden: {list(areas.keys())}")
+        print(f"Anzahl Datensätze: {len(analyzed_data)}")
+        
+        return render_template('route_analysis.html',
+                             areas=areas,
+                             top_potential=top_potential[:10],
+                             top_households=top_households[:10],
+                             total_data=analyzed_data)
+                             
+    except Exception as e:
+        print(f"Fehler in route_analysis: {str(e)}")
+        return render_template('route_analysis.html',
+                             areas={},
+                             top_potential=[],
+                             top_households=[],
+                             total_data=[],
+                             error=str(e))
 
 @app.route('/freiwilligen-dashboard')
 def volunteer_dashboard():
