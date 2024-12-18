@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Als Freiwilliger registrieren{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-custom">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    <i class="fas fa-user-plus"></i> 
+                    Als Freiwilliger registrieren
+                </h2>
+
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">
+                            <i class="fas fa-user"></i> Name
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope"></i> E-Mail
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">
+                            <i class="fas fa-phone"></i> Telefon
+                        </label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="route_id" class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Route
+                        </label>
+                        <select class="form-select" id="route_id" name="route_id" required>
+                            <option value="">Bitte wählen...</option>
+                            {% for route in routes %}
+                            <option value="{{ route.id }}" {% if request.args.get('route')|int == route.id %}selected{% endif %}>
+                                {{ route.city }} - {{ route.street }} {{ route.house_numbers }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date" class="form-label">
+                            <i class="fas fa-calendar"></i> Datum
+                        </label>
+                        <input type="date" class="form-control" id="date" name="date" required
+                               min="{{ now.strftime('%Y-%m-%d') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="time_slot" class="form-label">
+                            <i class="fas fa-clock"></i> Zeitfenster
+                        </label>
+                        <select class="form-select" id="time_slot" name="time_slot" required>
+                            <option value="">Bitte wählen...</option>
+                            <option value="17:00-19:00">17:00 - 19:00 Uhr (Werktags)</option>
+                            <option value="11:00-13:00">11:00 - 13:00 Uhr (Samstags)</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Hinweis:</strong> 
+                        Pro Route sind etwa 2 Stunden eingeplant, in denen durchschnittlich
+                        10 Türgespräche geführt werden können.
+                    </div>
+
+                    <button type="submit" class="btn btn-custom">
+                        <i class="fas fa-check"></i> Registrieren
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4 class="card-title">
+                    <i class="fas fa-info-circle"></i> 
+                    Wichtige Informationen
+                </h4>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <i class="fas fa-clock text-primary"></i>
+                        <strong>Zeitplanung:</strong>
+                        <ul>
+                            <li>Werktags: 17:00 - 19:00 Uhr (beste Zeit für Berufstätige)</li>
+                            <li>Samstags: 11:00 - 13:00 Uhr (beste Zeit am Wochenende)</li>
+                        </ul>
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-clipboard-check text-primary"></i>
+                        <strong>Vorbereitung:</strong>
+                        <ul>
+                            <li>Informationsmaterial wird gestellt</li>
+                            <li>Bitte Notizblock und Stift mitbringen</li>
+                            <li>Wetterfeste Kleidung bei Bedarf</li>
+                            <li>Wasser für unterwegs</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt text-primary"></i>
+                        <strong>Datenschutz:</strong><br>
+                        Ihre Daten werden ausschließlich für die Organisation des Wahlkampfs verwendet
+                        und nicht an Dritte weitergegeben.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

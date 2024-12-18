@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Datenanalyse{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .analysis-card {
+        background: var(--spd-white);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        transition: transform 0.3s;
+    }
+
+    .analysis-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .metric-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        background-color: rgba(227, 0, 15, 0.1);
+        color: var(--spd-red);
+        font-weight: 500;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .data-table th {
+        color: var(--spd-dark-red);
+        font-weight: 600;
+        padding: 1rem;
+        text-align: left;
+    }
+
+    .data-table td {
+        background-color: var(--spd-white);
+        padding: 1rem;
+    }
+
+    .data-table tr:hover td {
+        background-color: var(--spd-light-gray);
+    }
+
+    .filter-section {
+        background-color: var(--spd-light-gray);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: var(--spd-red);
+        color: var(--spd-white);
+        border-radius: 20px;
+        margin: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-badge:hover {
+        background-color: var(--spd-dark-red);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Datenanalyse</h1>
+
+    <!-- Filter-Sektion -->
+    <div class="filter-section">
+        <h5 class="mb-3"><i class="fas fa-filter"></i> Datenfilter</h5>
+        <div>
+            <span class="filter-badge active" data-filter="all">Alle Daten</span>
+            <span class="filter-badge" data-filter="high-potential">Hohes Potenzial (>2)</span>
+            <span class="filter-badge" data-filter="high-households">Viele Haushalte (>500)</span>
+            <span class="filter-badge" data-filter="high-rent">Hohe Mietquote (>60%)</span>
+            <span class="filter-badge" data-filter="high-children">Viele Familien (>30%)</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hauptanalyse -->
+        <div class="col-md-8">
+            <!-- Potenzial-Übersicht -->
+            <div class="analysis-card">
+                <h5 class="card-title"><i class="fas fa-chart-line"></i> Potenzialverteilung nach Stadtteilen</h5>
+                <div class="chart-container">
+                    <canvas id="potentialChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Wohnquartiere -->
+            <div class="analysis-card">
+                <h5 class="card-title"><i class="fas fa-star"></i> Top 10 Wohnquartiere</h5>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Wohnquartier</th>
+                                <th>Haushalte</th>
+                                <th>Mietquote</th>
+                                <th>Kinderquote</th>
+                                <th>Potenzial</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wohnquartiere-body">
+                            {% for data in top_potential %}
+                            <tr class="data-row">
+                                <td>
+                                    <strong>{{ data.Gemeinde }}</strong>
+                                </td>
+                                <td>{{ data.Haushalte }}</td>
+                                <td>{{ "%.1f"|format(data.Mietquote) }}%</td>
+                                <td>{{ "%.1f"|format(data.Kinderquote) }}%</td>
+                                <td>
+                                    <div class="progress mb-1" style="height: 10px;">
+                                        {% set width = (data.potential_score/3*100)|round %}
+                                        <div class="progress-bar bg-spd" 
+                                             role="progressbar" 
+                                             style="width: {{ width }}%">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.2f"|format(data.potential_score) }}/3</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seitenleiste -->
+        <div class="col-md-4">
+            <!-- Stadtteile-Übersicht -->
+            {% for area, data in areas.items() %}
+            <div class="analysis-card">
+                <h5 class="card-title">{{ area }}</h5>
+                <div class="mb-3">
+                    <span class="metric-badge">
+                        <i class="fas fa-home"></i> {{ data.stats.total_households }} Haushalte
+                    </span>
+                    <span class="metric-badge">
+                        <i class="fas fa-building"></i> {{ "%.1f"|format(data.stats.avg_rent_quota) }}% Mietquote
+                    </span>
+                    <span class="metric-badge">
+                        <i class="fas fa-child"></i> {{ "%.1f"|format(data.stats.avg_children_quota) }}% Familien
+                    </span>
+                </div>
+                <div class="progress mb-2" style="height: 8px;">
+                    {% set width = (data.stats.avg_potential/3*100)|round %}
+                    <div class="progress-bar bg-spd" 
+                         role="progressbar" 
+                         style="width: {{ width }}%">
+                    </div>
+                </div>
+                <small class="text-muted">Ø Potenzial-Score: {{ "%.2f"|format(data.stats.avg_potential) }}/3</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Detaillierte Analysen -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="analysis-card">
+                <h5 class="card-title"><i class="fas fa-chart-pie"></i> Verteilungsanalysen</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="householdDistributionChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="rentQuotaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Potenzial-Chart
+    const ctx = document.getElementById('potentialChart').getContext('2d');
+    const areaData = {{ areas|tojson }};
+    
+    const areaLabels = Object.keys(areaData);
+    const potentialData = areaLabels.map(area => areaData[area].stats.avg_potential);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: areaLabels,
+            datasets: [{
+                label: 'Durchschnittliches Potenzial',
+                data: potentialData,
+                backgroundColor: '#E3000F',
+                borderColor: '#A41D21',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 3,
+                    ticks: {
+                        stepSize: 0.5
+                    }
+                }
+            }
+        }
+    });
+
+    // Haushaltsverteilung
+    const householdCtx = document.getElementById('householdDistributionChart').getContext('2d');
+    const totalData = {{ total_data|tojson }};
+    
+    const householdRanges = ['0-100', '101-500', '501-1000', '1000+'];
+    const householdCounts = Array(householdRanges.length).fill(0);
+    
+    totalData.forEach(data => {
+        const households = data.Haushalte;
+        if (households <= 100) householdCounts[0]++;
+        else if (households <= 500) householdCounts[1]++;
+        else if (households <= 1000) householdCounts[2]++;
+        else householdCounts[3]++;
+    });
+    
+    new Chart(householdCtx, {
+        type: 'pie',
+        data: {
+            labels: householdRanges,
+            datasets: [{
+                data: householdCounts,
+                backgroundColor: ['#E3000F', '#A41D21', '#878787', '#f5f5f5']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Verteilung der Haushaltsgrößen'
+                }
+            }
+        }
+    });
+
+    // Mietquoten-Verteilung
+    const rentCtx = document.getElementById('rentQuotaChart').getContext('2d');
+    const rentRanges = ['0-25%', '26-50%', '51-75%', '76-100%'];
+    const rentCounts = Array(rentRanges.length).fill(0);
+    
+    totalData.forEach(data => {
+        const rentQuota = data.Mietquote;
+        if (rentQuota <= 25) rentCounts[0]++;
+        else if (rentQuota <= 50) rentCounts[1]++;
+        else if (rentQuota <= 75) rentCounts[2]++;
+        else rentCounts[3]++;
+    });
+    
+    new Chart(rentCtx, {
+        type: 'pie',
+        data: {
+            labels: rentRanges,
+            datasets: [{
+                data: rentCounts,
+                backgroundColor: ['#E3000F', '#A41D21', '#878787', '#f5f5f5']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Verteilung der Mietquoten'
+                }
+            }
+        }
+    });
+
+    // Filter-Funktionalität
+    const filterBadges = document.querySelectorAll('.filter-badge');
+    const rows = document.querySelectorAll('.data-row');
+    
+    filterBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            filterBadges.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            rows.forEach(row => {
+                const data = totalData.find(d => d.Gemeinde === row.querySelector('strong').textContent);
+                if (!data) return;
+                
+                let show = true;
+                switch(filter) {
+                    case 'high-potential':
+                        show = data.potential_score > 2;
+                        break;
+                    case 'high-households':
+                        show = data.Haushalte > 500;
+                        break;
+                    case 'high-rent':
+                        show = data.Mietquote > 60;
+                        break;
+                    case 'high-children':
+                        show = data.Kinderquote > 30;
+                        break;
+                    case 'all':
+                        show = true;
+                        break;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

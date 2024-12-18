@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Wahlkampf-Routen{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --spd-red: #E3000F;
+        --spd-dark-red: #A41D21;
+        --spd-gray: #878787;
+        --spd-light-gray: #f5f5f5;
+        --spd-white: #ffffff;
+    }
+
+    body {
+        background-color: var(--spd-light-gray);
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, var(--spd-red) 0%, var(--spd-dark-red) 100%);
+        color: var(--spd-white);
+        padding: 4rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 3rem;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.2);
+    }
+
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-section p {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .feature-card {
+        background: var(--spd-white);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: none;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(227, 0, 15, 0.2);
+    }
+
+    .feature-card h3 {
+        color: var(--spd-dark-red);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .feature-card p {
+        color: var(--spd-gray);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--spd-red);
+        border-color: var(--spd-red);
+        border-radius: 25px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--spd-dark-red);
+        border-color: var(--spd-dark-red);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
+    }
+
+    .btn-outline-light {
+        border-radius: 25px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+
+    .btn-outline-light:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .fas {
+        color: var(--spd-red);
+        margin-right: 0.5rem;
+    }
+
+    .hero-section .fas {
+        color: var(--spd-white);
+    }
+
+    /* Tabellen-Styles */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        border-top: none;
+        color: var(--spd-dark-red);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1rem;
+    }
+
+    .progress {
+        height: 20px;
+        background-color: rgba(227, 0, 15, 0.1);
+        border-radius: 10px;
+        margin-bottom: 0;
+    }
+
+    .progress-bar {
+        background-color: var(--spd-red);
+        border-radius: 10px;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
+
+    .table-responsive {
+        border-radius: 8px;
+        background-color: var(--spd-white);
+    }
+
+    .table tr:hover {
+        background-color: rgba(227, 0, 15, 0.05);
+    }
+
+    /* Bootstrap-Überschreibungen */
+    .bg-primary, .bg-success, .bg-spd {
+        background-color: var(--spd-red) !important;
+    }
+
+    .text-primary, .text-success, .text-info {
+        color: var(--spd-red) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <h1>Willkommen bei den<br>Wahlkampf-Routen!</h1>
+    <p class="lead">Organisiere effektive Tür-zu-Tür-Wahlkampagnen in Moers und Krefeld.</p>
+    <p>Wähle eine Route aus und registriere dich als Freiwilliger für den Wahlkampf.</p>
+    <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+        <i class="fas fa-plus"></i> Jetzt mitmachen
+    </a>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="feature-card">
+                <h3><i class="fas fa-map-marker-alt"></i> Verfügbare Routen</h3>
+                <p>Wir haben {{ routes|length }} optimierte Routen in Moers und Krefeld. Alle Routen wurden sorgfältig analysiert und ausgewählt.</p>
+                <a href="{{ url_for('map_view') }}" class="btn btn-primary">
+                    <i class="fas fa-map"></i> Zur Karte
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="feature-card">
+                <h3><i class="fas fa-clock"></i> Zeitaufwand</h3>
+                <p>Pro Route sind etwa 2 Stunden eingeplant, in denen durchschnittlich 10 T��rgespräche geführt werden können.</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary">
+                    <i class="fas fa-calendar-alt"></i> Termin wählen
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="feature-card">
+                <h3><i class="fas fa-list"></i> Aktuelle Routen</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Stadt</th>
+                                <th>Straße</th>
+                                <th>Hausnummern</th>
+                                <th>Mobilisierung</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for route in routes %}
+                            <tr>
+                                <td>{{ route.city }}</td>
+                                <td>{{ route.street }}</td>
+                                <td>{{ route.house_numbers }}</td>
+                                <td>
+                                    <div class="progress">
+                                        {% set width = (route.mobilization_index/3*100)|round %}
+                                        <div class="progress-bar bg-spd" 
+                                             role="progressbar" 
+                                             style="width: {{ width }}%" 
+                                             aria-valuenow="{{ width }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ route.mobilization_index }}/3
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('route_detail', route_id=route.id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
