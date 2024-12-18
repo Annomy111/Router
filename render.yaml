@@ -15,3 +15,9 @@ services:
         value: app.py
       - key: FLASK_ENV
         value: production
+      - key: MAIL_USERNAME
+        value: Dieter.Meier82@gmail.com
+      - key: MAIL_PASSWORD
+        value: kewm kjbk hrgh lrgd
+      - key: MAIL_DEFAULT_SENDER
+        value: Dieter.Meier82@gmail.com

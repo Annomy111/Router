@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Wahlkampf-Kalender{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <iframe src="{{ calendar_url }}" 
+                style="border: 0" 
+                width="100%" 
+                height="800" 
+                frameborder="0" 
+                scrolling="no">
+        </iframe>
+    </div>
+</div>
+{% endblock %} 

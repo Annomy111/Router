@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message
 from datetime import datetime
 import sqlite3
 import folium
@@ -14,10 +15,20 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluesse
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 
+# E-Mail-Konfiguration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+app.config['ADMIN_EMAIL'] = 'Fedo.Hagge-Kubat@fu-berlin.de'
+
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 # Datenbankmodelle
 class Volunteer(db.Model):
@@ -149,6 +160,39 @@ def init_db():
                 db.session.add(route)
             db.session.commit()
 
+def send_registration_notification(volunteer, route, registration):
+    """Sendet eine E-Mail-Benachrichtigung über eine neue Routenregistrierung"""
+    try:
+        subject = f"Neue Routenregistrierung: {route.street}"
+        body = f"""
+Neue Routenregistrierung eingegangen:
+
+Freiwilliger:
+- Name: {volunteer.name}
+- E-Mail: {volunteer.email}
+- Telefon: {volunteer.phone or 'Nicht angegeben'}
+
+Route:
+- Stadt: {route.city}
+- Straße: {route.street}
+- Hausnummern: {route.house_numbers}
+
+Termin:
+- Datum: {registration.date.strftime('%d.%m.%Y')}
+- Zeitfenster: {registration.time_slot}
+
+Status: {registration.status}
+"""
+        msg = Message(
+            subject=subject,
+            recipients=[app.config['ADMIN_EMAIL']],
+            body=body
+        )
+        mail.send(msg)
+        print(f"Benachrichtigungs-E-Mail wurde an {app.config['ADMIN_EMAIL']} gesendet")
+    except Exception as e:
+        print(f"Fehler beim Senden der E-Mail: {str(e)}")
+
 @app.route('/')
 def index():
     routes = Route.query.all()
@@ -209,6 +253,8 @@ def register():
             db.session.add(volunteer)
             db.session.commit()
         
+        route = Route.query.get(route_id)
+        
         # Erstelle neue Routenregistrierung
         registration = RouteRegistration(
             volunteer_id=volunteer.id,
@@ -218,6 +264,9 @@ def register():
         )
         db.session.add(registration)
         db.session.commit()
+        
+        # Sende E-Mail-Benachrichtigung
+        send_registration_notification(volunteer, route, registration)
         
         flash('Vielen Dank für deine Registrierung!', 'success')
         return redirect(url_for('route_detail', route_id=route_id))
@@ -336,6 +385,11 @@ def volunteer_dashboard():
     
     return render_template('volunteer_dashboard.html',
                          volunteers=volunteers)
+
+@app.route('/kalender')
+def calendar():
+    calendar_url = "https://calendar.google.com/calendar/embed?src=nvf3q8gvcrtm7ed3kfupcc0j78%40group.calendar.google.com&ctz=Europe%2FBerlin"
+    return render_template('calendar.html', calendar_url=calendar_url)
 
 if __name__ == '__main__':
     init_db()
