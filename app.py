@@ -225,50 +225,6 @@ def register():
     routes = Route.query.all()
     return render_template('register.html', routes=routes, now=datetime.now())
 
-@app.route('/statistiken')
-def statistics():
-    # Gesamtstatistiken
-    total_routes = Route.query.count()
-    total_registrations = RouteRegistration.query.count()
-    total_volunteers = Volunteer.query.count()
-    
-    # Durchschnittliche Indizes
-    avg_mobilization = db.session.query(func.avg(Route.mobilization_index)).scalar() or 0
-    avg_conviction = db.session.query(func.avg(Route.conviction_index)).scalar() or 0
-    
-    # Top Routen nach Mobilisierungspotenzial
-    top_routes = Route.query.order_by(Route.mobilization_index.desc()).limit(5).all()
-    
-    # Statistiken nach Stadt
-    city_stats_query = db.session.query(
-        Route.city,
-        func.count(Route.id).label('route_count'),
-        func.avg(Route.mobilization_index).label('avg_mobilization'),
-        func.avg(Route.conviction_index).label('avg_conviction'),
-        func.sum(Route.households).label('total_households')
-    ).group_by(Route.city).all()
-    
-    # Konvertiere die Row-Objekte in ein serialisierbares Format
-    city_stats = [
-        {
-            'city': stat.city,
-            'route_count': stat.route_count,
-            'avg_mobilization': float(stat.avg_mobilization) if stat.avg_mobilization else 0,
-            'avg_conviction': float(stat.avg_conviction) if stat.avg_conviction else 0,
-            'total_households': int(stat.total_households) if stat.total_households else 0
-        }
-        for stat in city_stats_query
-    ]
-    
-    return render_template('statistics.html',
-                         total_routes=total_routes,
-                         total_registrations=total_registrations,
-                         total_volunteers=total_volunteers,
-                         avg_mobilization=round(avg_mobilization, 2),
-                         avg_conviction=round(avg_conviction, 2),
-                         top_routes=top_routes,
-                         city_stats=city_stats)
-
 @app.route('/api/route-data')
 def route_data():
     routes = Route.query.all()
