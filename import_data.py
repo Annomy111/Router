@@ -1,11 +1,24 @@
 import json
 from app import app, db, WohnquartierAnalyse
 
+def clear_data():
+    """Löscht alle existierenden Daten aus der Tabelle"""
+    try:
+        num_rows_deleted = db.session.query(WohnquartierAnalyse).delete()
+        db.session.commit()
+        print(f"{num_rows_deleted} existierende Einträge wurden gelöscht")
+    except Exception as e:
+        print(f"Fehler beim Löschen der Daten: {str(e)}")
+        db.session.rollback()
+
 def import_data():
     try:
         # Lese die Daten aus der JSON-Datei
         with open('initial_data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
+        
+        # Lösche zuerst alle existierenden Daten
+        clear_data()
         
         # Importiere jeden Datensatz
         for item in data:
