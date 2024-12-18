@@ -216,15 +216,47 @@ def map_view():
     def get_color(mobilization, conviction):
         avg = (mobilization + conviction) / 2
         if avg >= 2.5:
-            return 'darkred'
+            return '#8B0000'  # Dunkelrot
         elif avg >= 2:
-            return 'red'
+            return '#E3000F'  # SPD-Rot
         elif avg >= 1.5:
-            return 'orange'
+            return '#FF4500'  # Orange-Rot
         else:
-            return 'lightred'
+            return '#FF6B6B'  # Helles Rot
+
+    # Routing-Koordinaten für jede Stadt
+    route_coordinates = {
+        'Moers': {
+            'Niephauser Straße': [
+                [51.451, 6.626],
+                [51.4515, 6.6265],
+                [51.452, 6.627],
+                [51.4525, 6.6275]
+            ],
+            'Windmühlenstraße': [
+                [51.449, 6.623],
+                [51.4495, 6.6235],
+                [51.450, 6.624],
+                [51.4505, 6.6245]
+            ]
+        },
+        'Krefeld': {
+            'Gubener Straße': [
+                [51.333, 6.564],
+                [51.3335, 6.5645],
+                [51.334, 6.565],
+                [51.3345, 6.5655]
+            ],
+            'Breslauer Straße': [
+                [51.335, 6.568],
+                [51.3355, 6.5685],
+                [51.336, 6.569],
+                [51.3365, 6.5695]
+            ]
+        }
+    }
     
-    # Füge Marker für jede Route hinzu
+    # Füge Marker und Routen für jede Route hinzu
     for route in routes:
         # Erstelle detaillierten Popup-Inhalt
         popup_html = f"""
@@ -267,8 +299,9 @@ def map_view():
         """
         
         # Erstelle Icon mit dynamischer Farbe
+        color = get_color(route.mobilization_index, route.conviction_index)
         icon = folium.Icon(
-            color=get_color(route.mobilization_index, route.conviction_index),
+            color='red',
             icon='info-sign'
         )
         
@@ -284,21 +317,36 @@ def map_view():
         folium.Circle(
             [route.lat, route.lon],
             radius=200,  # Radius in Metern
-            color="#E3000F",
+            color=color,
             fill=True,
-            fillColor="#E3000F",
+            fillColor=color,
             fillOpacity=0.1
         ).add_to(m)
+        
+        # Füge die konkrete Route hinzu
+        if route.city in route_coordinates and route.street in route_coordinates[route.city]:
+            coords = route_coordinates[route.city][route.street]
+            folium.PolyLine(
+                coords,
+                weight=4,
+                color=color,
+                opacity=0.8,
+                popup=f"Route: {route.street}"
+            ).add_to(m)
     
     # Füge Legende hinzu
     legend_html = """
     <div style="position: fixed; bottom: 50px; right: 50px; z-index: 1000; background-color: white;
                 padding: 10px; border: 2px solid #E3000F; border-radius: 5px;">
         <h4 style="color: #E3000F; margin-bottom: 10px;">Legende</h4>
-        <p><i class="fa fa-circle" style="color: darkred;"></i> Sehr hohes Potenzial (≥2.5)</p>
-        <p><i class="fa fa-circle" style="color: red;"></i> Hohes Potenzial (≥2.0)</p>
-        <p><i class="fa fa-circle" style="color: orange;"></i> Mittleres Potenzial (≥1.5)</p>
-        <p><i class="fa fa-circle" style="color: lightred;"></i> Normales Potenzial (<1.5)</p>
+        <p><i class="fa fa-circle" style="color: #8B0000;"></i> Sehr hohes Potenzial (≥2.5)</p>
+        <p><i class="fa fa-circle" style="color: #E3000F;"></i> Hohes Potenzial (≥2.0)</p>
+        <p><i class="fa fa-circle" style="color: #FF4500;"></i> Mittleres Potenzial (≥1.5)</p>
+        <p><i class="fa fa-circle" style="color: #FF6B6B;"></i> Normales Potenzial (<1.5)</p>
+        <div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 10px;">
+            <p><i class="fa fa-map-signs"></i> Linie = Gehroute</p>
+            <p><i class="fa fa-circle-o"></i> Kreis = Einzugsbereich</p>
+        </div>
     </div>
     """
     m.get_root().html.add_child(folium.Element(legend_html))
@@ -372,40 +420,59 @@ def route_data():
 @app.route('/routen-analyse')
 def route_analysis():
     try:
-        # Hole alle Wohnquartiere
-        wohnquartiere = WohnquartierAnalyse.query.all()
-        analyzed_data = []
+        # Verbinde die Tabellen wohnquartier und excel_data
+        sql_query = """
+        SELECT 
+            w.Gemeinde,
+            w.Haushalte,
+            w.Haushalte_zur_Miete,
+            w.Haushalte_mit_Kindern,
+            e.STRASSE_NAME,
+            e.HAUSNR_ANFANG,
+            e.HAUSNR_ENDE,
+            e.MOBILISIERUNGSINDEX_KLASSE_WKR,
+            e.UEBERZEUGUNSINDEX_KLASSE_WKR
+        FROM wohnquartier w
+        JOIN excel_data e ON w.Gemeinde = e.GEMEINDE_NAME
+        WHERE w.Haushalte IS NOT NULL
+        """
         
-        # Gruppiere die Daten nach Gemeinde
+        result = db.session.execute(sql_query)
+        rows = result.fetchall()
+        
+        analyzed_data = []
         gemeinde_data = {}
-        for wq in wohnquartiere:
-            if not wq.Gemeinde:  # Überspringe Einträge ohne Gemeinde
-                continue
-                
-            if wq.Gemeinde not in gemeinde_data:
-                gemeinde_data[wq.Gemeinde] = {
+        
+        for row in rows:
+            gemeinde = row.Gemeinde
+            
+            if gemeinde not in gemeinde_data:
+                gemeinde_data[gemeinde] = {
                     'Haushalte': 0,
                     'Haushalte_zur_Miete': 0,
                     'Haushalte_mit_Kindern': 0,
                     'Mobilisierung_Sum': 0,
                     'Ueberzeugung_Sum': 0,
-                    'Anzahl': 0
+                    'Anzahl': 0,
+                    'Strassen': set()
                 }
             
-            gd = gemeinde_data[wq.Gemeinde]
-            gd['Haushalte'] += wq.Haushalte or 0
-            gd['Haushalte_zur_Miete'] += wq.Haushalte_zur_Miete or 0
-            gd['Haushalte_mit_Kindern'] += wq.Haushalte_mit_Kindern or 0
-            gd['Mobilisierung_Sum'] += wq.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
-            gd['Ueberzeugung_Sum'] += wq.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
+            gd = gemeinde_data[gemeinde]
+            gd['Haushalte'] += row.Haushalte or 0
+            gd['Haushalte_zur_Miete'] += row.Haushalte_zur_Miete or 0
+            gd['Haushalte_mit_Kindern'] += row.Haushalte_mit_Kindern or 0
+            gd['Mobilisierung_Sum'] += row.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
+            gd['Ueberzeugung_Sum'] += row.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
             gd['Anzahl'] += 1
+            if row.STRASSE_NAME:
+                gd['Strassen'].add(row.STRASSE_NAME)
             
             # Berechne Scores für einzelnes Wohnquartier
-            if wq.Haushalte and wq.Haushalte > 0:
-                mietquote = (wq.Haushalte_zur_Miete or 0) / wq.Haushalte * 100
-                kinderquote = (wq.Haushalte_mit_Kindern or 0) / wq.Haushalte * 100
-                mobilisierung = wq.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
-                ueberzeugung = wq.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
+            if row.Haushalte and row.Haushalte > 0:
+                mietquote = (row.Haushalte_zur_Miete or 0) / row.Haushalte * 100
+                kinderquote = (row.Haushalte_mit_Kindern or 0) / row.Haushalte * 100
+                mobilisierung = row.MOBILISIERUNGSINDEX_KLASSE_WKR or 0
+                ueberzeugung = row.UEBERZEUGUNSINDEX_KLASSE_WKR or 0
                 
                 potential_score = (
                     (mietquote / 100 * 0.3) +  # Mietquote (30%)
@@ -415,8 +482,10 @@ def route_analysis():
                 ) * 3  # Skalierung auf 0-3
                 
                 analyzed_data.append({
-                    'Gemeinde': wq.Gemeinde,
-                    'Haushalte': wq.Haushalte,
+                    'Gemeinde': gemeinde,
+                    'Strasse': row.STRASSE_NAME,
+                    'Hausnummern': f"{row.HAUSNR_ANFANG}-{row.HAUSNR_ENDE}" if row.HAUSNR_ANFANG else "",
+                    'Haushalte': row.Haushalte,
                     'Mietquote': mietquote,
                     'Kinderquote': kinderquote,
                     'Mobilisierung': mobilisierung,
@@ -436,7 +505,8 @@ def route_analysis():
                         'avg_children_quota': (gd['Haushalte_mit_Kindern'] / gd['Haushalte'] * 100) if gd['Haushalte'] > 0 else 0,
                         'avg_mobilisierung': gd['Mobilisierung_Sum'] / gd['Anzahl'],
                         'avg_ueberzeugung': gd['Ueberzeugung_Sum'] / gd['Anzahl'],
-                        'total_districts': gd['Anzahl']
+                        'total_districts': gd['Anzahl'],
+                        'total_streets': len(gd['Strassen'])
                     }
                 }
                 

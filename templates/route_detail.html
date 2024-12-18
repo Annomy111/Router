@@ -14,11 +14,6 @@
         --spd-white: #ffffff;
     }
 
-    body {
-        background-color: var(--spd-light-gray);
-        color: #333333;
-    }
-
     .progress {
         height: 25px;
         background-color: rgba(227, 0, 15, 0.1);
@@ -390,24 +385,75 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function initMap() {
-        var mapLat = parseFloat('{{ route.lat }}');
-        var mapLon = parseFloat('{{ route.lon }}');
+        const mapLat = parseFloat('{{ route.lat }}');
+        const mapLon = parseFloat('{{ route.lon }}');
         
         if (!isNaN(mapLat) && !isNaN(mapLon)) {
-            var mapCenter = [mapLat, mapLon];
-            var map = L.map('map').setView(mapCenter, 16);
+            const mapCenter = [mapLat, mapLon];
+            const map = L.map('map').setView(mapCenter, 16);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
             
-            var markerText = '{{ route.street }} {{ route.house_numbers }}<br>{{ route.city }}';
-            L.marker(mapCenter).addTo(map)
+            const markerText = '{{ route.street }} {{ route.house_numbers }}<br>{{ route.city }}';
+            L.marker(mapCenter)
+                .addTo(map)
                 .bindPopup(markerText)
                 .openPopup();
             
-            setTimeout(function() {
+            L.circle(mapCenter, {
+                radius: 200,
+                color: '#E3000F',
+                fillColor: '#E3000F',
+                fillOpacity: 0.1
+            }).addTo(map);
+            
+            let routeCoordinates = [];
+            {% if route.city == 'Moers' %}
+                {% if route.street == 'Niephauser Straße' %}
+                    routeCoordinates = [
+                        [51.451, 6.626],
+                        [51.4515, 6.6265],
+                        [51.452, 6.627],
+                        [51.4525, 6.6275]
+                    ];
+                {% elif route.street == 'Windmühlenstraße' %}
+                    routeCoordinates = [
+                        [51.449, 6.623],
+                        [51.4495, 6.6235],
+                        [51.450, 6.624],
+                        [51.4505, 6.6245]
+                    ];
+                {% endif %}
+            {% elif route.city == 'Krefeld' %}
+                {% if route.street == 'Gubener Straße' %}
+                    routeCoordinates = [
+                        [51.333, 6.564],
+                        [51.3335, 6.5645],
+                        [51.334, 6.565],
+                        [51.3345, 6.5655]
+                    ];
+                {% elif route.street == 'Breslauer Straße' %}
+                    routeCoordinates = [
+                        [51.335, 6.568],
+                        [51.3355, 6.5685],
+                        [51.336, 6.569],
+                        [51.3365, 6.5695]
+                    ];
+                {% endif %}
+            {% endif %}
+            
+            if (routeCoordinates.length > 0) {
+                L.polyline(routeCoordinates, {
+                    color: '#E3000F',
+                    weight: 4,
+                    opacity: 0.8
+                }).addTo(map);
+            }
+            
+            setTimeout(() => {
                 map.invalidateSize();
             }, 100);
         } else {

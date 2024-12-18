@@ -78,6 +78,22 @@
     .filter-badge:hover {
         background-color: var(--spd-dark-red);
     }
+
+    .progress {
+        height: 10px;
+        background-color: rgba(227, 0, 15, 0.1);
+        border-radius: 5px;
+        margin-bottom: 0;
+    }
+
+    .progress-bar {
+        background-color: var(--spd-red);
+        border-radius: 5px;
+    }
+
+    .bg-spd {
+        background-color: var(--spd-red) !important;
+    }
 </style>
 {% endblock %}
 
@@ -115,7 +131,9 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Wohnquartier</th>
+                                <th>Gemeinde</th>
+                                <th>Straße</th>
+                                <th>Hausnummern</th>
                                 <th>Haushalte</th>
                                 <th>Mietquote</th>
                                 <th>Kinderquote</th>
@@ -128,6 +146,8 @@
                                 <td>
                                     <strong>{{ data.Gemeinde }}</strong>
                                 </td>
+                                <td>{{ data.Strasse }}</td>
+                                <td>{{ data.Hausnummern }}</td>
                                 <td>{{ data.Haushalte }}</td>
                                 <td>{{ "%.1f"|format(data.Mietquote) }}%</td>
                                 <td>{{ "%.1f"|format(data.Kinderquote) }}%</td>
@@ -164,6 +184,9 @@
                     </span>
                     <span class="metric-badge">
                         <i class="fas fa-child"></i> {{ "%.1f"|format(data.stats.avg_children_quota) }}% Familien
+                    </span>
+                    <span class="metric-badge">
+                        <i class="fas fa-road"></i> {{ data.stats.total_streets }} Straßen
                     </span>
                 </div>
                 <div class="progress mb-2" style="height: 8px;">
