@@ -11,7 +11,7 @@ from sqlalchemy import func
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///neue_daten.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
@@ -58,6 +58,13 @@ class WohnquartierAnalyse(db.Model):
     Haushalte_zur_Miete = db.Column(db.Float)
     Haushalte_mit_Kindern = db.Column(db.Float)
     
+    # Neue Felder für Wahlkreis- und Quartiersdetails
+    WKR_SCHLUESSEL = db.Column(db.String)
+    WKR_NAME = db.Column(db.String)
+    WOHNQUART_SCHLUESSEL = db.Column(db.String)
+    MOBILISIERUNGSINDEX_KLASSE_WKR = db.Column(db.Integer)
+    UEBERZEUGUNSINDEX_KLASSE_WKR = db.Column(db.Integer)
+    
     def calculate_scores(self):
         """Berechnet verschiedene Scoring-Werte für das Wohnquartier"""
         if not self.Haushalte or self.Haushalte <= 0:
@@ -73,14 +80,17 @@ class WohnquartierAnalyse(db.Model):
         
         # Gewichteter Score basierend auf den verfügbaren Daten
         potential_score = (
-            mietquote / 100 * 0.6 +              # Mietquote (60%)
-            (kinderquote / 100) * 0.4            # Kinderquote (40%)
+            mietquote / 100 * 0.4 +              # Mietquote (40%)
+            (kinderquote / 100) * 0.3 +          # Kinderquote (30%)
+            (self.MOBILISIERUNGSINDEX_KLASSE_WKR or 0) / 3 * 0.3  # Mobilisierungsindex (30%)
         )
         
         return {
             'mietquote': mietquote,
             'kinderquote': kinderquote,
-            'potential_score': potential_score
+            'potential_score': potential_score,
+            'mobilisierung': self.MOBILISIERUNGSINDEX_KLASSE_WKR,
+            'ueberzeugung': self.UEBERZEUGUNSINDEX_KLASSE_WKR
         }
 
 def init_db():
