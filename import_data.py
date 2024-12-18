@@ -1,14 +1,18 @@
 import json
 from app import app, db, WohnquartierAnalyse
 
-def clear_data():
-    """Löscht alle existierenden Daten aus der Tabelle"""
+def recreate_tables():
+    """Löscht und erstellt die Tabellen neu"""
     try:
-        num_rows_deleted = db.session.query(WohnquartierAnalyse).delete()
-        db.session.commit()
-        print(f"{num_rows_deleted} existierende Einträge wurden gelöscht")
+        # Lösche alle Tabellen
+        db.drop_all()
+        print("Alle Tabellen wurden gelöscht")
+        
+        # Erstelle Tabellen neu
+        db.create_all()
+        print("Tabellen wurden neu erstellt")
     except Exception as e:
-        print(f"Fehler beim Löschen der Daten: {str(e)}")
+        print(f"Fehler beim Neuerstellen der Tabellen: {str(e)}")
         db.session.rollback()
 
 def import_data():
@@ -16,9 +20,6 @@ def import_data():
         # Lese die Daten aus der JSON-Datei
         with open('initial_data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
-        # Lösche zuerst alle existierenden Daten
-        clear_data()
         
         # Importiere jeden Datensatz
         for item in data:
@@ -34,13 +35,17 @@ def import_data():
         db.session.commit()
         print(f"{len(data)} Datensätze wurden erfolgreich importiert")
         
+        # Überprüfe die importierten Daten
+        count = db.session.query(WohnquartierAnalyse).count()
+        print(f"Anzahl der Datensätze in der Datenbank: {count}")
+        
     except Exception as e:
         print(f"Fehler beim Importieren der Daten: {str(e)}")
         db.session.rollback()
 
 if __name__ == "__main__":
     with app.app_context():
-        # Erstelle die Tabellen
-        db.create_all()
+        # Erstelle die Tabellen neu
+        recreate_tables()
         # Importiere die Daten
         import_data() 
