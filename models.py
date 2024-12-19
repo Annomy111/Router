@@ -14,11 +14,11 @@ class Route(db.Model):
     rental_percentage = db.Column(db.Float)
     lat = db.Column(db.Float, nullable=False)
     lon = db.Column(db.Float, nullable=False)
-    meeting_point = db.Column(db.String(500))  # Neues Feld für den Treffpunkt
-    meeting_point_lat = db.Column(db.Float)    # Koordinaten des Treffpunkts
-    meeting_point_lon = db.Column(db.Float)    # Koordinaten des Treffpunkts
+    meeting_point = db.Column(db.String(500))
+    meeting_point_lat = db.Column(db.Float)
+    meeting_point_lon = db.Column(db.Float)
     registrations = db.relationship('RouteRegistration', backref='route', lazy=True)
-    max_volunteers = db.Column(db.Integer, default=4)  # Maximale Anzahl der Freiwilligen
+    max_volunteers = db.Column(db.Integer, default=4)
 
     def get_registration_stats(self):
         """Berechnet Statistiken für die Routenregistrierungen"""
@@ -43,4 +43,49 @@ class RouteRegistration(db.Model):
     route_id = db.Column(db.Integer, db.ForeignKey('route.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     time_slot = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='geplant')  # geplant, abgeschlossen, abgesagt
+
+class WohnquartierAnalyse(db.Model):
+    __tablename__ = 'wohnquartier'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    Gemeinde = db.Column(db.String(100))
+    Haushalte = db.Column(db.Integer)
+    Haushalte_zur_Miete = db.Column(db.Float)
+    Haushalte_mit_Kindern = db.Column(db.Float)
+    
+    # Wahlkreis- und Quartiersdetails
+    WKR_SCHLUESSEL = db.Column(db.String(50))
+    WKR_NAME = db.Column(db.String(100))
+    WOHNQUART_SCHLUESSEL = db.Column(db.String(50))
+    MOBILISIERUNGSINDEX_KLASSE_WKR = db.Column(db.Integer)
+    UEBERZEUGUNSINDEX_KLASSE_WKR = db.Column(db.Integer)
+    
+    def calculate_scores(self):
+        """Berechnet verschiedene Scoring-Werte für das Wohnquartier"""
+        if not self.Haushalte or self.Haushalte <= 0:
+            return {
+                'mietquote': 0,
+                'kinderquote': 0,
+                'potential_score': 0
+            }
+        
+        # Grundlegende Quoten
+        mietquote = (self.Haushalte_zur_Miete or 0) / self.Haushalte * 100
+        kinderquote = (self.Haushalte_mit_Kindern or 0) / self.Haushalte * 100
+        
+        # Gewichteter Score
+        potential_score = (
+            mietquote / 100 * 0.4 +              # Mietquote (40%)
+            (kinderquote / 100) * 0.3 +          # Kinderquote (30%)
+            (self.MOBILISIERUNGSINDEX_KLASSE_WKR or 0) / 3 * 0.3  # Mobilisierungsindex (30%)
+        )
+        
+        return {
+            'mietquote': mietquote,
+            'kinderquote': kinderquote,
+            'potential_score': potential_score,
+            'mobilisierung': self.MOBILISIERUNGSINDEX_KLASSE_WKR,
+            'ueberzeugung': self.UEBERZEUGUNSINDEX_KLASSE_WKR
+        }
