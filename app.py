@@ -9,10 +9,11 @@ from folium import plugins
 import pandas as pd
 import numpy as np
 from sqlalchemy import func
+from models import db, Route, Volunteer, RouteRegistration, WohnquartierAnalyse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///neue_daten.db')
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 
 # E-Mail-Konfiguration
@@ -22,97 +23,22 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
-app.config['ADMIN_EMAIL'] = 'Fedo.Hagge-Kubat@fu-berlin.de'
+app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'Fedo.Hagge-Kubat@fu-berlin.de')
 
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 mail = Mail(app)
-
-# Datenbankmodelle
-class Volunteer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20))
-    registrations = db.relationship('RouteRegistration', backref='volunteer', lazy=True)
-
-class Route(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    city = db.Column(db.String(100), nullable=False)
-    street = db.Column(db.String(100), nullable=False)
-    house_numbers = db.Column(db.String(100), nullable=False)
-    mobilization_index = db.Column(db.Integer, nullable=False)
-    conviction_index = db.Column(db.Integer, nullable=False)
-    households = db.Column(db.Integer)
-    rental_percentage = db.Column(db.Float)
-    lat = db.Column(db.Float)  # Breitengrad
-    lon = db.Column(db.Float)  # Längengrad
-    registrations = db.relationship('RouteRegistration', backref='route', lazy=True)
-    meeting_point = db.Column(db.String(255))
-    meeting_point_lat = db.Column(db.Float)
-    meeting_point_lon = db.Column(db.Float)
-
-class RouteRegistration(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteer.id'), nullable=False)
-    route_id = db.Column(db.Integer, db.ForeignKey('route.id'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
-    time_slot = db.Column(db.String(20), nullable=False)  # z.B. "17:00-19:00"
-    status = db.Column(db.String(20), default='geplant')  # geplant, abgeschlossen, abgesagt
-
-class WohnquartierAnalyse(db.Model):
-    __tablename__ = 'wohnquartier'
-    
-    # Eigener Primärschlüssel
-    id = db.Column(db.Integer, primary_key=True)
-    Gemeinde = db.Column(db.String)
-    Haushalte = db.Column(db.Integer)
-    Haushalte_zur_Miete = db.Column(db.Float)
-    Haushalte_mit_Kindern = db.Column(db.Float)
-    
-    # Neue Felder für Wahlkreis- und Quartiersdetails
-    WKR_SCHLUESSEL = db.Column(db.String)
-    WKR_NAME = db.Column(db.String)
-    WOHNQUART_SCHLUESSEL = db.Column(db.String)
-    MOBILISIERUNGSINDEX_KLASSE_WKR = db.Column(db.Integer)
-    UEBERZEUGUNSINDEX_KLASSE_WKR = db.Column(db.Integer)
-    
-    def calculate_scores(self):
-        """Berechnet verschiedene Scoring-Werte für das Wohnquartier"""
-        if not self.Haushalte or self.Haushalte <= 0:
-            return {
-                'mietquote': 0,
-                'kinderquote': 0,
-                'potential_score': 0
-            }
-        
-        # Grundlegende Quoten
-        mietquote = (self.Haushalte_zur_Miete or 0) / self.Haushalte * 100
-        kinderquote = (self.Haushalte_mit_Kindern or 0) / self.Haushalte * 100
-        
-        # Gewichteter Score basierend auf den verfügbaren Daten
-        potential_score = (
-            mietquote / 100 * 0.4 +              # Mietquote (40%)
-            (kinderquote / 100) * 0.3 +          # Kinderquote (30%)
-            (self.MOBILISIERUNGSINDEX_KLASSE_WKR or 0) / 3 * 0.3  # Mobilisierungsindex (30%)
-        )
-        
-        return {
-            'mietquote': mietquote,
-            'kinderquote': kinderquote,
-            'potential_score': potential_score,
-            'mobilisierung': self.MOBILISIERUNGSINDEX_KLASSE_WKR,
-            'ueberzeugung': self.UEBERZEUGUNSINDEX_KLASSE_WKR
-        }
 
 def init_db():
     with app.app_context():
         db.create_all()
+        print("Tabellen wurden erstellt")
         
         # Füge Routen hinzu, wenn noch keine existieren
         if Route.query.count() == 0:
+            print("Füge initiale Routen hinzu...")
             routes = [
                 Route(
                     city='Moers',
@@ -120,9 +46,9 @@ def init_db():
                     house_numbers='81-165',
                     mobilization_index=3,
                     conviction_index=3,
-                    households=None,  # Wird aus der DB geladen
-                    rental_percentage=None,  # Wird aus der DB geladen
-                    lat=51.451,  # Beispielkoordinaten
+                    households=None,
+                    rental_percentage=None,
+                    lat=51.451,
                     lon=6.626,
                     meeting_point="Vor dem Kiosk an der Ecke Niephauser Straße 81",
                     meeting_point_lat=51.451,
@@ -162,6 +88,11 @@ def init_db():
                 db.session.add(route)
             
             db.session.commit()
+            print("Initiale Routen wurden hinzugefügt")
+        else:
+            print("Routen existieren bereits")
+        
+        print("Datenbankinitialisierung abgeschlossen")
 
 def send_registration_notification(volunteer, route, registration):
     """Sendet eine E-Mail-Benachrichtigung über eine neue Routenregistrierung"""
