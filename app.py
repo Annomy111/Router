@@ -50,6 +50,9 @@ class Route(db.Model):
     lat = db.Column(db.Float)  # Breitengrad
     lon = db.Column(db.Float)  # Längengrad
     registrations = db.relationship('RouteRegistration', backref='route', lazy=True)
+    meeting_point = db.Column(db.String(255))
+    meeting_point_lat = db.Column(db.Float)
+    meeting_point_lon = db.Column(db.Float)
 
 class RouteRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -120,7 +123,10 @@ def init_db():
                     households=None,  # Wird aus der DB geladen
                     rental_percentage=None,  # Wird aus der DB geladen
                     lat=51.451,  # Beispielkoordinaten
-                    lon=6.626
+                    lon=6.626,
+                    meeting_point="Vor dem Kiosk an der Ecke Niephauser Straße 81",
+                    meeting_point_lat=51.451,
+                    meeting_point_lon=6.626
                 ),
                 Route(
                     city='Moers',
@@ -131,7 +137,10 @@ def init_db():
                     households=None,
                     rental_percentage=None,
                     lat=51.449,
-                    lon=6.623
+                    lon=6.623,
+                    meeting_point="Am Parkplatz Windmühlenstraße 59",
+                    meeting_point_lat=51.449,
+                    meeting_point_lon=6.623
                 ),
                 Route(
                     city='Krefeld',
@@ -142,22 +151,16 @@ def init_db():
                     households=949,
                     rental_percentage=74.6,
                     lat=51.333,
-                    lon=6.564
-                ),
-                Route(
-                    city='Krefeld',
-                    street='Breslauer Straße',
-                    house_numbers='1-31',
-                    mobilization_index=3,
-                    conviction_index=3,
-                    households=949,
-                    rental_percentage=74.6,
-                    lat=51.335,
-                    lon=6.568
+                    lon=6.564,
+                    meeting_point="Vor dem Spielplatz Gubener Straße 1",
+                    meeting_point_lat=51.333,
+                    meeting_point_lon=6.564
                 )
             ]
+            
             for route in routes:
                 db.session.add(route)
+            
             db.session.commit()
 
 def send_registration_notification(volunteer, route, registration):
@@ -366,40 +369,52 @@ def route_detail(route_id):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
         route_id = request.form.get('route_id')
-        date = request.form.get('date')
-        time_slot = request.form.get('time_slot')
+        route = Route.query.get_or_404(route_id)
         
-        # Prüfe ob Freiwilliger bereits existiert
-        volunteer = Volunteer.query.filter_by(email=email).first()
-        if not volunteer:
-            volunteer = Volunteer(name=name, email=email, phone=phone)
-            db.session.add(volunteer)
-            db.session.commit()
-        
-        route = Route.query.get(route_id)
-        
-        # Erstelle neue Routenregistrierung
-        registration = RouteRegistration(
-            volunteer_id=volunteer.id,
-            route_id=route_id,
-            date=datetime.strptime(date, '%Y-%m-%d'),
-            time_slot=time_slot
+        # Prüfe verfügbare Plätze
+        stats = route.get_registration_stats()
+        if stats['available_slots'] <= 0:
+            flash('Diese Route ist bereits voll besetzt. Bitte wählen Sie eine andere Route.', 'danger')
+            return redirect(url_for('register'))
+
+        # Erstelle neuen Freiwilligen
+        volunteer = Volunteer(
+            name=request.form.get('name'),
+            email=request.form.get('email'),
+            phone=request.form.get('phone')
         )
-        db.session.add(registration)
-        db.session.commit()
         
-        # Sende E-Mail-Benachrichtigung
-        send_registration_notification(volunteer, route, registration)
-        
-        flash('Vielen Dank für deine Registrierung!', 'success')
-        return redirect(url_for('route_detail', route_id=route_id))
+        try:
+            db.session.add(volunteer)
+            db.session.flush()  # Generiere ID für den Freiwilligen
+            
+            # Erstelle Registrierung
+            registration = RouteRegistration(
+                volunteer_id=volunteer.id,
+                route_id=route_id,
+                date=datetime.strptime(request.form.get('date'), '%Y-%m-%d'),
+                time_slot=request.form.get('time_slot'),
+                status='geplant'
+            )
+            
+            db.session.add(registration)
+            db.session.commit()
+            
+            # Sende Benachrichtigungen
+            send_registration_notification(volunteer, route, registration)
+            
+            flash('Ihre Registrierung wurde erfolgreich gespeichert!', 'success')
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'danger')
+            return redirect(url_for('register'))
     
     routes = Route.query.all()
-    return render_template('register.html', routes=routes, now=datetime.now())
+    now = datetime.now()
+    return render_template('register.html', routes=routes, now=now)
 
 @app.route('/api/route-data')
 def route_data():

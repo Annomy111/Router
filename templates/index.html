@@ -182,7 +182,7 @@
         <div class="col-md-6">
             <div class="feature-card">
                 <h3><i class="fas fa-clock"></i> Zeitaufwand</h3>
-                <p>Pro Route sind etwa 2 Stunden eingeplant, in denen durchschnittlich 10 T��rgespräche geführt werden können.</p>
+                <p>Pro Route sind etwa 2 Stunden eingeplant, in denen durchschnittlich 10 Türgespräche geführt werden können.</p>
                 <a href="{{ url_for('register') }}" class="btn btn-primary">
                     <i class="fas fa-calendar-alt"></i> Termin wählen
                 </a>
@@ -202,6 +202,7 @@
                                 <th>Straße</th>
                                 <th>Hausnummern</th>
                                 <th>Mobilisierung</th>
+                                <th>Freiwillige</th>
                                 <th>Aktion</th>
                             </tr>
                         </thead>
@@ -223,6 +224,25 @@
                                             {{ route.mobilization_index }}/3
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    {% set stats = route.get_registration_stats() %}
+                                    <div class="progress" style="height: 20px;">
+                                        {% set width = stats.percentage|round %}
+                                        <div class="progress-bar {% if stats.current >= stats.maximum %}bg-success{% else %}bg-spd{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ width }}%" 
+                                             aria-valuenow="{{ width }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ stats.current }}/{{ stats.maximum }}
+                                        </div>
+                                    </div>
+                                    {% if stats.available_slots > 0 %}
+                                        <small class="text-muted">Noch {{ stats.available_slots }} Plätze frei</small>
+                                    {% else %}
+                                        <small class="text-danger">Keine Plätze mehr verfügbar</small>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <a href="{{ url_for('route_detail', route_id=route.id) }}" 

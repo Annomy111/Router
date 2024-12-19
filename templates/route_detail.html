@@ -381,6 +381,12 @@
                                     <br>von {{ route.house_numbers.split('-')[0] }} 
                                     bis {{ route.house_numbers.split('-')[1] }}
                                 </li>
+                                {% if route.meeting_point %}
+                                <li class="list-group-item bg-transparent">
+                                    <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
+                                    <br>{{ route.meeting_point }}
+                                </li>
+                                {% endif %}
                             </ul>
                         </div>
                         <div class="col-md-6">
@@ -499,6 +505,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 .bindPopup(markerText)
                 .openPopup();
             
+            {% if route.meeting_point and route.meeting_point_lat and route.meeting_point_lon %}
+            const meetingPoint = [{{ route.meeting_point_lat|float }}, {{ route.meeting_point_lon|float }}];
+            const meetingPointMarker = L.marker(meetingPoint, {
+                icon: L.divIcon({
+                    className: 'meeting-point-marker',
+                    html: '<i class="fas fa-flag" style="color: #E3000F; font-size: 24px;"></i>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24]
+                })
+            }).addTo(map);
+            meetingPointMarker.bindPopup('<strong>Treffpunkt:</strong><br>{{ route.meeting_point|e }}');
+            {% endif %}
+            
             L.circle(mapCenter, {
                 radius: 200,
                 color: '#E3000F',
@@ -530,13 +549,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         [51.3335, 6.5645],
                         [51.334, 6.565],
                         [51.3345, 6.5655]
-                    ];
-                {% elif route.street == 'Breslauer Straße' %}
-                    routeCoordinates = [
-                        [51.335, 6.568],
-                        [51.3355, 6.5685],
-                        [51.336, 6.569],
-                        [51.3365, 6.5695]
                     ];
                 {% endif %}
             {% endif %}
