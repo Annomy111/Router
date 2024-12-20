@@ -491,6 +491,18 @@ def calendar():
     calendar_url = "https://calendar.google.com/calendar/embed?src=nvf3q8gvcrtm7ed3kfupcc0j78%40group.calendar.google.com&ctz=Europe%2FBerlin"
     return render_template('calendar.html', calendar_url=calendar_url)
 
+@app.route('/api/routes/<int:route_id>/path', methods=['POST'])
+def save_route_path(route_id):
+    route = Route.query.get_or_404(route_id)
+    data = request.get_json()
+    
+    if 'coordinates' in data:
+        route.path_coordinates = data['coordinates']
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'error': 'Keine Koordinaten gefunden'}), 400
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001) 
