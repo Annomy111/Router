@@ -3,10 +3,8 @@
 {% block title %}{{ route.street }} - Details{% endblock %}
 
 {% block head %}
-<!-- Mapbox CSS -->
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-<!-- Mapbox JS -->
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+<!-- Google Maps JavaScript API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places"></script>
 
 <style>
     :root {
@@ -135,24 +133,44 @@
         box-shadow: 0 4px 12px rgba(227, 0, 15, 0.2);
     }
 
-    /* Mapbox Anpassungen */
-    .mapboxgl-popup {
-        max-width: 200px;
+    .highlight-box {
+        background-color: var(--spd-white);
+        border-left: 4px solid var(--spd-red);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0 12px 12px 0;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
     }
 
-    .mapboxgl-popup-content {
-        padding: 15px;
+    .time-slot-badge {
+        background-color: var(--spd-red);
+        color: var(--spd-white);
+        padding: 0.75rem 1.25rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        margin: 0.5rem;
+        display: inline-block;
+        transition: all 0.3s;
+        box-shadow: 0 2px 6px rgba(227, 0, 15, 0.2);
+    }
+
+    .time-slot-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
+        background-color: var(--spd-dark-red);
+    }
+
+    .list-group-item {
         border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(227, 0, 15, 0.1);
+        transition: all 0.3s;
     }
 
-    .mapboxgl-popup-content h6 {
-        color: var(--spd-dark-red);
-        margin-bottom: 5px;
-    }
-
-    .mapboxgl-popup-content p {
-        margin-bottom: 0;
-        color: var(--spd-gray);
+    .list-group-item:hover {
+        background-color: var(--spd-light-gray);
+        transform: translateX(5px);
+        border-color: var(--spd-red);
     }
 </style>
 {% endblock %}
@@ -200,6 +218,46 @@
             {% endif %}
         </div>
 
+        <div class="highlight-box">
+            <h5><i class="fas fa-route text-primary"></i> Routendetails</h5>
+            <p class="lead">
+                Diese Route wurde speziell für einen effizienten Tür-zu-Tür-Wahlkampf optimiert.
+                Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz ausgelegt.
+            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent">
+                            <i class="fas fa-clock text-info"></i> Zeitbedarf: 2 Stunden
+                        </li>
+                        <li class="list-group-item bg-transparent">
+                            <i class="fas fa-door-open text-success"></i> Geplante Gespräche: 10-15 Türen
+                        </li>
+                        <li class="list-group-item bg-transparent">
+                            <i class="fas fa-walking text-primary"></i> Empfohlene Gehrichtung: 
+                            <br>von {{ route.house_numbers.split('-')[0] }} 
+                            bis {{ route.house_numbers.split('-')[1] }}
+                        </li>
+                        {% if route.meeting_point %}
+                        <li class="list-group-item bg-transparent">
+                            <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
+                            <br>{{ route.meeting_point }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Beste Besuchszeiten:</h6>
+                    <span class="time-slot-badge">
+                        <i class="fas fa-sun"></i> Werktags 17-19 Uhr
+                    </span>
+                    <span class="time-slot-badge">
+                        <i class="fas fa-coffee"></i> Samstags 11-13 Uhr
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="map-container" id="map"></div>
 
         <div class="registration-section">
@@ -227,25 +285,93 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    mapboxgl.accessToken = '{{ mapbox_token }}';
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [{{ route.lon }}, {{ route.lat }}],
-        zoom: 15
+    // Initialisiere die Google Map
+    const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: {{ route.lat }}, lng: {{ route.lon }} },
+        zoom: 15,
+        styles: [
+            {
+                "featureType": "all",
+                "elementType": "geometry",
+                "stylers": [{ "color": "#f5f5f5" }]
+            },
+            {
+                "featureType": "road",
+                "elementType": "geometry",
+                "stylers": [{ "color": "#ffffff" }]
+            }
+        ]
     });
 
-    // Füge Marker für die Route hinzu
-    new mapboxgl.Marker()
-        .setLngLat([{{ route.lon }}, {{ route.lat }}])
-        .addTo(map);
+    // Marker für die Route
+    const routeMarker = new google.maps.Marker({
+        position: { lat: {{ route.lat }}, lng: {{ route.lon }} },
+        map: map,
+        title: '{{ route.street }}',
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#E3000F",
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#ffffff"
+        }
+    });
 
-    // Füge Marker für den Treffpunkt hinzu
+    // Info-Window für die Route
+    const routeInfo = new google.maps.InfoWindow({
+        content: '<div style="padding: 10px;">' +
+                 '<h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>' +
+                 '<p style="margin: 0;">{{ route.house_numbers }}</p>' +
+                 '</div>'
+    });
+
+    routeMarker.addListener('click', () => {
+        routeInfo.open(map, routeMarker);
+    });
+
     {% if route.meeting_point_lat and route.meeting_point_lon %}
-    new mapboxgl.Marker({ color: '#E3000F' })
-        .setLngLat([{{ route.meeting_point_lon }}, {{ route.meeting_point_lat }}])
-        .setPopup(new mapboxgl.Popup().setHTML('<h6>Treffpunkt</h6><p>{{ route.meeting_point }}</p>'))
-        .addTo(map);
+    // Marker für den Treffpunkt
+    const meetingPointMarker = new google.maps.Marker({
+        position: { 
+            lat: {{ route.meeting_point_lat }}, 
+            lng: {{ route.meeting_point_lon }} 
+        },
+        map: map,
+        title: 'Treffpunkt',
+        icon: {
+            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 6,
+            fillColor: "#E3000F",
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#ffffff"
+        }
+    });
+
+    // Info-Window für den Treffpunkt
+    const meetingPointInfo = new google.maps.InfoWindow({
+        content: '<div style="padding: 10px;">' +
+                 '<h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>' +
+                 '<p style="margin: 0;">{{ route.meeting_point }}</p>' +
+                 '</div>'
+    });
+
+    meetingPointMarker.addListener('click', () => {
+        meetingPointInfo.open(map, meetingPointMarker);
+    });
+    {% endif %}
+
+    // Zeichne die Route, wenn Koordinaten vorhanden sind
+    {% if route.path_coordinates %}
+    const routePath = new google.maps.Polyline({
+        path: {{ route.path_coordinates|tojson }},
+        geodesic: true,
+        strokeColor: '#E3000F',
+        strokeOpacity: 1.0,
+        strokeWeight: 3
+    });
+    routePath.setMap(map);
     {% endif %}
 });
 </script>

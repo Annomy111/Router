@@ -18,6 +18,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluesse
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
+app.config['GOOGLE_MAPS_KEY'] = 'AIzaSyA80P6QZPiV5Z_dv3sSY9w3igF2XSIIgxA'
 
 # E-Mail-Konfiguration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -252,51 +253,24 @@ def index():
 
 @app.route('/karte')
 def map_view():
-    # Nur aktive Routen anzeigen
+    return render_template('map.html', google_maps_key=app.config['GOOGLE_MAPS_KEY'])
+
+@app.route('/api/routes')
+def get_routes():
     routes = Route.query.filter_by(is_active=True).all()
-    
-    # Erstelle Karte zentriert auf Moers
-    m = folium.Map(location=[51.451, 6.626], zoom_start=11)
-    
-    # Füge Cluster-Marker-Gruppe hinzu
-    marker_cluster = plugins.MarkerCluster(name="Routen")
-    m.add_child(marker_cluster)
-    
-    # Füge Layer Control hinzu
-    folium.LayerControl().add_to(m)
-    
-    # Erstelle Farbskala für Potenzial
-    def get_color(mobilization, conviction):
-        avg = (mobilization + conviction) / 2
-        if avg >= 2.5:
-            return 'green'
-        elif avg >= 1.5:
-            return 'yellow'
-        else:
-            return 'red'
-    
-    # Füge Marker für jede Route hinzu
-    for route in routes:
-        # Erstelle Popup-Inhalt
-        popup_html = f"""
-        <div style="min-width: 200px;">
-            <h6>{route.street} {route.house_numbers}</h6>
-            <p><strong>Stadt:</strong> {route.city}</p>
-            <p><strong>Mobilisierungsindex:</strong> {route.mobilization_index}</p>
-            <p><strong>Überzeugungsindex:</strong> {route.conviction_index}</p>
-            <p><strong>Treffpunkt:</strong> {route.meeting_point}</p>
-            <a href="/route/{route.id}" class="btn btn-primary btn-sm">Details</a>
-        </div>
-        """
-        
-        # Füge Marker hinzu
-        folium.Marker(
-            location=[route.lat, route.lon],
-            popup=folium.Popup(popup_html, max_width=300),
-            icon=folium.Icon(color=get_color(route.mobilization_index, route.conviction_index))
-        ).add_to(marker_cluster)
-    
-    return render_template('map.html', map=m._repr_html_())
+    return jsonify([{
+        'id': route.id,
+        'city': route.city,
+        'street': route.street,
+        'house_numbers': route.house_numbers,
+        'mobilization_index': route.mobilization_index,
+        'conviction_index': route.conviction_index,
+        'lat': route.lat,
+        'lon': route.lon,
+        'meeting_point': route.meeting_point,
+        'meeting_point_lat': route.meeting_point_lat,
+        'meeting_point_lon': route.meeting_point_lon
+    } for route in routes])
 
 @app.route('/route/<int:route_id>')
 def route_detail(route_id):
@@ -306,7 +280,7 @@ def route_detail(route_id):
     return render_template('route_detail.html', 
                          route=route, 
                          registrations=registrations,
-                         mapbox_token=mapbox_token)
+                         google_maps_key=app.config['GOOGLE_MAPS_KEY'])
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
