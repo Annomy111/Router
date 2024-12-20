@@ -12,6 +12,8 @@ from sqlalchemy import func
 from models import db, Route, Volunteer, RouteRegistration, WohnquartierAnalyse, User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from backup_db import backup_database, restore_database
+import atexit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
@@ -43,6 +45,15 @@ def load_user(user_id):
 # Erstelle die Datenbank und Tabellen
 with app.app_context():
     db.create_all()
+
+# Backup bei Serverstart wiederherstellen
+try:
+    restore_database()
+except Exception as e:
+    print(f"Fehler beim Wiederherstellen des Backups: {e}")
+
+# Backup bei Serverbeendigung erstellen
+atexit.register(backup_database)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
