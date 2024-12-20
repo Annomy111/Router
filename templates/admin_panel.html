@@ -121,142 +121,138 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-4">
-                <i class="fas fa-shield-alt"></i> Admin Panel
-            </h2>
-        </div>
-    </div>
-
+<div class="container mt-4">
+    <h1>Admin-Panel</h1>
+    
     <!-- Statistik-Übersicht -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="stats-box">
-                <p class="stats-number">{{ stats.total_routes }}</p>
-                <p class="stats-label">Aktive Routen</p>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Aktive Routen</h5>
+                    <p class="card-text display-4">{{ stats.total_routes }}</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-box">
-                <p class="stats-number">{{ stats.total_volunteers }}</p>
-                <p class="stats-label">Registrierte Helfer</p>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Registrierte Helfer</h5>
+                    <p class="card-text display-4">{{ stats.total_volunteers }}</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-box">
-                <p class="stats-number">{{ stats.total_registrations }}</p>
-                <p class="stats-label">Gebuchte Termine</p>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gebuchte Termine</h5>
+                    <p class="card-text display-4">{{ stats.total_registrations }}</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-box">
-                <p class="stats-number">{{ stats.completion_rate }}%</p>
-                <p class="stats-label">Abschlussquote</p>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Abschlussquote</h5>
+                    <p class="card-text display-4">{{ stats.completion_rate }}%</p>
+                </div>
             </div>
         </div>
     </div>
-
+    
     <!-- Routen-Verwaltung -->
-    <div class="admin-card p-4">
-        <h4 class="mb-4"><i class="fas fa-route"></i> Routen-Verwaltung</h4>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Route</th>
-                        <th>Stadt</th>
-                        <th>Status</th>
-                        <th>Registrierungen</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for route in routes %}
-                    <tr>
-                        <td>
-                            <strong>{{ route.street }}</strong>
-                            <br>
-                            <small class="text-muted">{{ route.house_numbers }}</small>
-                        </td>
-                        <td>{{ route.city }}</td>
-                        <td>
-                            <span class="route-status {% if route.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                {% if route.is_active %}Aktiv{% else %}Inaktiv{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            {{ route.get_registration_stats().current }}/{{ route.get_registration_stats().maximum }}
-                        </td>
-                        <td>
-                            <button class="btn-toggle {% if route.is_active %}active{% else %}inactive{% endif %}"
-                                    onclick="toggleRouteStatus({{ route.id }})">
-                                {% if route.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}
-                            </button>
-                            <a href="{{ url_for('route_detail', route_id=route.id) }}" 
-                               class="btn btn-sm btn-outline-primary ml-2">
-                                Details
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Routen-Verwaltung</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Stadt</th>
+                            <th>Straße</th>
+                            <th>Hausnummern</th>
+                            <th>Status</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for route in routes %}
+                        <tr>
+                            <td>{{ route.city }}</td>
+                            <td>{{ route.street }}</td>
+                            <td>{{ route.house_numbers }}</td>
+                            <td>
+                                {% if route.is_active %}
+                                <span class="badge bg-success">Aktiv</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn {% if route.is_active %}btn-danger{% else %}btn-success{% endif %}"
+                                        onclick="toggleRouteStatus({{ route.id }}, this)">
+                                    {% if route.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
+    
     <!-- Registrierungen -->
-    <div class="admin-card p-4">
-        <h4 class="mb-4"><i class="fas fa-calendar-check"></i> Aktuelle Registrierungen</h4>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Helfer</th>
-                        <th>Route</th>
-                        <th>Datum</th>
-                        <th>Status</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for reg in registrations %}
-                    <tr>
-                        <td>
-                            <strong>{{ reg.volunteer.name }}</strong>
-                            <br>
-                            <small class="text-muted">{{ reg.volunteer.email }}</small>
-                        </td>
-                        <td>{{ reg.route.street }}</td>
-                        <td>
-                            {{ reg.date.strftime('%d.%m.%Y') }}
-                            <br>
-                            <small class="text-muted">{{ reg.time_slot }}</small>
-                        </td>
-                        <td>
-                            <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
-                                {{ reg.status }}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-success" onclick="updateRegistrationStatus({{ reg.id }}, 'abgeschlossen')">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="updateRegistrationStatus({{ reg.id }}, 'abgesagt')">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card">
+        <div class="card-header">
+            <h2>Aktuelle Registrierungen</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Helfer</th>
+                            <th>Route</th>
+                            <th>Datum</th>
+                            <th>Status</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in registrations %}
+                        <tr>
+                            <td>{{ reg.volunteer.name }}</td>
+                            <td>{{ reg.route.street }}</td>
+                            <td>{{ reg.date.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ reg.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-success" onclick="updateRegistrationStatus({{ reg.id }}, 'abgeschlossen')">
+                                        Abschließen
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="updateRegistrationStatus({{ reg.id }}, 'abgesagt')">
+                                        Absagen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleRouteStatus(routeId) {
+function toggleRouteStatus(routeId, button) {
     fetch(`/api/routes/${routeId}/toggle`, {
         method: 'POST',
         headers: {
@@ -266,8 +262,29 @@ function toggleRouteStatus(routeId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Aktualisiere den Button-Text und die Klasse
+            if (data.is_active) {
+                button.textContent = 'Deaktivieren';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-danger');
+                button.closest('tr').querySelector('.badge').className = 'badge bg-success';
+                button.closest('tr').querySelector('.badge').textContent = 'Aktiv';
+            } else {
+                button.textContent = 'Aktivieren';
+                button.classList.remove('btn-danger');
+                button.classList.add('btn-success');
+                button.closest('tr').querySelector('.badge').className = 'badge bg-danger';
+                button.closest('tr').querySelector('.badge').textContent = 'Inaktiv';
+            }
+            // Zeige eine Erfolgsmeldung
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.error || 'Ein Fehler ist aufgetreten');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Ein Fehler ist aufgetreten');
     });
 }
 
@@ -283,8 +300,30 @@ function updateRegistrationStatus(regId, status) {
     .then(data => {
         if (data.success) {
             location.reload();
+        } else {
+            showAlert('danger', data.error || 'Ein Fehler ist aufgetreten');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Ein Fehler ist aufgetreten');
     });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+    
+    // Automatisch ausblenden nach 3 Sekunden
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 </script>
 {% endblock %} 

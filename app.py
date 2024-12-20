@@ -101,7 +101,11 @@ def toggle_route_status(route_id):
     route.is_active = not route.is_active
     db.session.commit()
     
-    return jsonify({'success': True})
+    return jsonify({
+        'success': True,
+        'is_active': route.is_active,
+        'message': f"Route wurde {'aktiviert' if route.is_active else 'deaktiviert'}"
+    })
 
 @app.route('/api/registrations/<int:reg_id>/status', methods=['POST'])
 @login_required
@@ -234,12 +238,12 @@ Status: {registration.status}
 
 @app.route('/')
 def index():
-    routes = Route.query.all()
+    routes = Route.query.filter_by(is_active=True).all()
     return render_template('index.html', routes=routes)
 
 @app.route('/karte')
 def map_view():
-    routes = Route.query.all()
+    routes = Route.query.filter_by(is_active=True).all()
     
     # Erstelle Karte zentriert auf Moers
     m = folium.Map(location=[51.451, 6.626], zoom_start=11)
@@ -255,142 +259,34 @@ def map_view():
     def get_color(mobilization, conviction):
         avg = (mobilization + conviction) / 2
         if avg >= 2.5:
-            return '#8B0000'  # Dunkelrot
-        elif avg >= 2:
-            return '#E3000F'  # SPD-Rot
+            return 'green'
         elif avg >= 1.5:
-            return '#FF4500'  # Orange-Rot
+            return 'yellow'
         else:
-            return '#FF6B6B'  # Helles Rot
-
-    # Routing-Koordinaten für jede Stadt
-    route_coordinates = {
-        'Moers': {
-            'Niephauser Straße': [
-                [51.451, 6.626],
-                [51.4515, 6.6265],
-                [51.452, 6.627],
-                [51.4525, 6.6275]
-            ],
-            'Windmühlenstraße': [
-                [51.449, 6.623],
-                [51.4495, 6.6235],
-                [51.450, 6.624],
-                [51.4505, 6.6245]
-            ]
-        },
-        'Krefeld': {
-            'Gubener Straße': [
-                [51.333, 6.564],
-                [51.3335, 6.5645],
-                [51.334, 6.565],
-                [51.3345, 6.5655]
-            ],
-            'Breslauer Straße': [
-                [51.335, 6.568],
-                [51.3355, 6.5685],
-                [51.336, 6.569],
-                [51.3365, 6.5695]
-            ]
-        }
-    }
+            return 'red'
     
-    # Füge Marker und Routen für jede Route hinzu
+    # Füge Marker für jede Route hinzu
     for route in routes:
-        # Erstelle detaillierten Popup-Inhalt
+        # Erstelle Popup-Inhalt
         popup_html = f"""
         <div style="min-width: 200px;">
-            <h4 style="color: #E3000F; margin-bottom: 10px;">{route.street} {route.house_numbers}</h4>
-            <p style="margin-bottom: 5px;"><strong>Stadt:</strong> {route.city}</p>
-            <div style="margin: 10px 0;">
-                <div style="margin-bottom: 5px;">
-                    <strong>Mobilisierung:</strong> {route.mobilization_index}/3
-                    <div class="progress" style="height: 10px; background-color: #f5f5f5; border-radius: 5px;">
-                        <div class="progress-bar" style="width: {(route.mobilization_index/3*100)}%; 
-                             background-color: #E3000F; border-radius: 5px;"></div>
-                    </div>
-                </div>
-                <div style="margin-bottom: 5px;">
-                    <strong>Überzeugung:</strong> {route.conviction_index}/3
-                    <div class="progress" style="height: 10px; background-color: #f5f5f5; border-radius: 5px;">
-                        <div class="progress-bar" style="width: {(route.conviction_index/3*100)}%; 
-                             background-color: #E3000F; border-radius: 5px;"></div>
-                    </div>
-                </div>
-            </div>
-        """
-        
-        if route.households:
-            popup_html += f"<p><strong>Haushalte:</strong> {route.households}</p>"
-        if route.rental_percentage:
-            popup_html += f"<p><strong>Mietquote:</strong> {route.rental_percentage:.1f}%</p>"
-            
-        popup_html += f"""
-            <div style="margin-top: 10px;">
-                <a href="/route/{route.id}" 
-                   style="background-color: #E3000F; color: white; 
-                          padding: 5px 10px; text-decoration: none; 
-                          border-radius: 5px; display: inline-block;">
-                    Details ansehen
-                </a>
-            </div>
+            <h6>{route.street} {route.house_numbers}</h6>
+            <p><strong>Stadt:</strong> {route.city}</p>
+            <p><strong>Mobilisierungsindex:</strong> {route.mobilization_index}</p>
+            <p><strong>Überzeugungsindex:</strong> {route.conviction_index}</p>
+            <p><strong>Treffpunkt:</strong> {route.meeting_point}</p>
+            <a href="/route/{route.id}" class="btn btn-primary btn-sm">Details</a>
         </div>
         """
         
-        # Erstelle Icon mit dynamischer Farbe
-        color = get_color(route.mobilization_index, route.conviction_index)
-        icon = folium.Icon(
-            color='red',
-            icon='info-sign'
-        )
-        
-        # Füge Marker zum Cluster hinzu
+        # Füge Marker hinzu
         folium.Marker(
-            [route.lat, route.lon],
+            location=[route.lat, route.lon],
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"{route.street} ({route.city})",
-            icon=icon
+            icon=folium.Icon(color=get_color(route.mobilization_index, route.conviction_index))
         ).add_to(marker_cluster)
-        
-        # Füge einen Kreis hinzu, um den Einzugsbereich zu visualisieren
-        folium.Circle(
-            [route.lat, route.lon],
-            radius=200,  # Radius in Metern
-            color=color,
-            fill=True,
-            fillColor=color,
-            fillOpacity=0.1
-        ).add_to(m)
-        
-        # Füge die konkrete Route hinzu
-        if route.city in route_coordinates and route.street in route_coordinates[route.city]:
-            coords = route_coordinates[route.city][route.street]
-            folium.PolyLine(
-                coords,
-                weight=4,
-                color=color,
-                opacity=0.8,
-                popup=f"Route: {route.street}"
-            ).add_to(m)
     
-    # Füge Legende hinzu
-    legend_html = """
-    <div style="position: fixed; bottom: 50px; right: 50px; z-index: 1000; background-color: white;
-                padding: 10px; border: 2px solid #E3000F; border-radius: 5px;">
-        <h4 style="color: #E3000F; margin-bottom: 10px;">Legende</h4>
-        <p><i class="fa fa-circle" style="color: #8B0000;"></i> Sehr hohes Potenzial (≥2.5)</p>
-        <p><i class="fa fa-circle" style="color: #E3000F;"></i> Hohes Potenzial (≥2.0)</p>
-        <p><i class="fa fa-circle" style="color: #FF4500;"></i> Mittleres Potenzial (≥1.5)</p>
-        <p><i class="fa fa-circle" style="color: #FF6B6B;"></i> Normales Potenzial (<1.5)</p>
-        <div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 10px;">
-            <p><i class="fa fa-map-signs"></i> Linie = Gehroute</p>
-            <p><i class="fa fa-circle-o"></i> Kreis = Einzugsbereich</p>
-        </div>
-    </div>
-    """
-    m.get_root().html.add_child(folium.Element(legend_html))
-    
-    return m._repr_html_()
+    return render_template('map.html', map=m._repr_html_())
 
 @app.route('/route/<int:route_id>')
 def route_detail(route_id):
