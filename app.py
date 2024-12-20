@@ -238,11 +238,21 @@ Status: {registration.status}
 
 @app.route('/')
 def index():
+    # Nur aktive Routen anzeigen
     routes = Route.query.filter_by(is_active=True).all()
-    return render_template('index.html', routes=routes)
+    
+    # Gruppiere Routen nach Stadt
+    cities = {}
+    for route in routes:
+        if route.city not in cities:
+            cities[route.city] = []
+        cities[route.city].append(route)
+    
+    return render_template('index.html', cities=cities, routes=routes)
 
 @app.route('/karte')
 def map_view():
+    # Nur aktive Routen anzeigen
     routes = Route.query.filter_by(is_active=True).all()
     
     # Erstelle Karte zentriert auf Moers
