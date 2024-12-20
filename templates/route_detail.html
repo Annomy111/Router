@@ -3,8 +3,11 @@
 {% block title %}{{ route.street }} - Details{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="">
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+<!-- Mapbox CSS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+<!-- Mapbox JS -->
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+
 <style>
     :root {
         --spd-red: #E3000F;
@@ -14,573 +17,236 @@
         --spd-white: #ffffff;
     }
 
+    .route-detail-card {
+        background: var(--spd-white);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        margin-bottom: 1.5rem;
+        padding: 2rem;
+    }
+
+    .route-header {
+        margin-bottom: 2rem;
+    }
+
+    .route-header h1 {
+        color: var(--spd-dark-red);
+        margin-bottom: 0.5rem;
+    }
+
+    .route-header p {
+        color: var(--spd-gray);
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .route-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--spd-light-gray);
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat-card h3 {
+        color: var(--spd-dark-red);
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .stat-card p {
+        color: var(--spd-gray);
+        margin-bottom: 0;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
     .progress {
-        height: 25px;
-        background-color: rgba(227, 0, 15, 0.1);
-        border-radius: 25px;
+        height: 20px;
+        background-color: var(--spd-light-gray);
+        border-radius: 10px;
         margin-bottom: 1rem;
     }
 
     .progress-bar {
-        line-height: 25px;
-        font-weight: 600;
         background-color: var(--spd-red);
-        border-radius: 25px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
     }
 
-    #map {
+    .map-container {
         height: 400px;
-        width: 100%;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
     }
 
-    .route-preview {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 12px;
+    .registration-section {
+        margin-top: 3rem;
+    }
+
+    .registration-section h2 {
+        color: var(--spd-dark-red);
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
     }
 
-    .stats-card {
-        background: linear-gradient(135deg, var(--spd-white) 0%, var(--spd-light-gray) 100%);
-        border: none;
-        border-radius: 12px;
-        transition: transform 0.3s, box-shadow 0.3s;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
-    }
-
-    .stats-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 24px rgba(227, 0, 15, 0.2);
-    }
-
-    .highlight-box {
-        background-color: var(--spd-white);
-        border-left: 4px solid var(--spd-red);
+    .registration-card {
+        background: var(--spd-white);
+        border-radius: 8px;
         padding: 1.5rem;
-        margin: 1.5rem 0;
-        border-radius: 0 12px 12px 0;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .time-slot-badge {
-        background-color: var(--spd-red);
-        color: var(--spd-white);
-        padding: 0.75rem 1.25rem;
-        border-radius: 25px;
-        font-size: 0.9rem;
-        margin: 0.5rem;
-        display: inline-block;
-        transition: all 0.3s;
-        box-shadow: 0 2px 6px rgba(227, 0, 15, 0.2);
-    }
-
-    .time-slot-badge:hover {
+    .registration-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
-        background-color: var(--spd-dark-red);
-    }
-
-    .card {
-        background-color: var(--spd-white);
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(227, 0, 15, 0.2);
-    }
-
-    .btn-primary {
-        background-color: var(--spd-red);
-        border-color: var(--spd-red);
-        border-radius: 25px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.3s;
-        color: var(--spd-white);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--spd-dark-red);
-        border-color: var(--spd-dark-red);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
     .badge {
-        background-color: var(--spd-red);
-        color: var(--spd-white);
         padding: 0.5rem 1rem;
-        border-radius: 15px;
-        font-weight: 500;
-    }
-
-    .list-group-item {
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        border: 1px solid rgba(227, 0, 15, 0.1);
-        transition: all 0.3s;
-        background-color: var(--spd-white);
-    }
-
-    .list-group-item:hover {
-        background-color: var(--spd-light-gray);
-        transform: translateX(5px);
-        border-color: var(--spd-red);
-    }
-
-    .display-4 {
-        color: var(--spd-red);
-        font-weight: 700;
-    }
-
-    .card-title {
-        color: var(--spd-dark-red);
+        border-radius: 20px;
         font-weight: 600;
-        margin-bottom: 1.5rem;
     }
 
-    .lead {
-        color: var(--spd-gray);
-        line-height: 1.6;
-    }
-
-    .text-muted {
-        color: var(--spd-gray) !important;
-    }
-
-    .fas {
-        color: var(--spd-red);
-    }
-
-    h2, h3, h4, h5, h6 {
-        color: var(--spd-dark-red);
-    }
-
-    .alert {
-        border-radius: 12px;
+    .btn-register {
+        background-color: var(--spd-red);
+        color: white;
         border: none;
-        background-color: rgba(227, 0, 15, 0.1);
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-register:hover {
+        background-color: var(--spd-dark-red);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.2);
+    }
+
+    /* Mapbox Anpassungen */
+    .mapboxgl-popup {
+        max-width: 200px;
+    }
+
+    .mapboxgl-popup-content {
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .mapboxgl-popup-content h6 {
         color: var(--spd-dark-red);
-        padding: 1rem;
+        margin-bottom: 5px;
     }
 
-    /* Bootstrap-Überschreibungen */
-    .bg-primary, .bg-success {
-        background-color: var(--spd-red) !important;
-    }
-
-    .text-primary, .text-success, .text-info, .text-danger {
-        color: var(--spd-red) !important;
-    }
-
-    .text-warning {
-        color: var(--spd-dark-red) !important;
-    }
-
-    /* Karten-Anpassungen */
-    .leaflet-control-zoom a {
-        color: var(--spd-red) !important;
-    }
-
-    .leaflet-popup-content-wrapper {
-        border-left: 4px solid var(--spd-red);
-    }
-
-    /* Mobile Optimierungen */
-    @media (max-width: 768px) {
-        .card {
-            margin-bottom: 1rem;
-        }
-
-        .card-body {
-            padding: 1rem;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-        }
-
-        .progress {
-            height: 20px;
-        }
-
-        .time-slot-badge {
-            display: block;
-            margin: 0.5rem 0;
-            text-align: center;
-        }
-
-        #map {
-            height: 300px;
-        }
-
-        .route-preview {
-            height: 150px;
-        }
-
-        .highlight-box {
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        .list-group-item {
-            padding: 0.75rem;
-        }
-
-        .btn-primary {
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-
-        h2 {
-            font-size: 1.5rem;
-        }
-
-        h4 {
-            font-size: 1.2rem;
-        }
-
-        h5 {
-            font-size: 1.1rem;
-        }
-
-        h6 {
-            font-size: 1rem;
-        }
-
-        .lead {
-            font-size: 1rem;
-        }
-
-        .display-4 {
-            font-size: 2rem;
-        }
-    }
-
-    /* Touch-Optimierungen */
-    @media (hover: none) {
-        .btn-primary,
-        .time-slot-badge,
-        .list-group-item {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        .card:hover,
-        .stats-card:hover {
-            transform: none;
-            box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
-        }
-
-        .list-group-item:hover {
-            transform: none;
-        }
-
-        .time-slot-badge {
-            padding: 1rem;
-        }
+    .mapboxgl-popup-content p {
+        margin-bottom: 0;
+        color: var(--spd-gray);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h2 class="card-title">
-                    <i class="fas fa-map-marker-alt"></i> 
-                    {{ route.street }} {{ route.house_numbers }}
-                </h2>
-                <h4 class="text-muted mb-4">{{ route.city }}</h4>
+<div class="container py-4">
+    <div class="route-detail-card">
+        <div class="route-header">
+            <h1>{{ route.street }}</h1>
+            <p>{{ route.house_numbers }}, {{ route.city }}</p>
+        </div>
 
-                <img src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l+E3000F({{ route.lon }},{{ route.lat }})/{{ route.lon }},{{ route.lat }},15,0/600x200@2x?access_token={{ mapbox_token }}" 
-                     alt="Routenvorschau von {{ route.street }}" 
-                     class="route-preview"
-                     onerror="this.style.display='none'">
-                
-                <div class="highlight-box mb-4">
-                    <h5 class="mb-3"><i class="fas fa-star"></i> Routenbewertung</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-chart-line"></i> Mobilisierungspotenzial</h6>
-                            <div class="progress mb-3">
-                                {% set mobilization_width = (route.mobilization_index/3*100)|round %}
-                                <div class="progress-bar bg-danger" 
-                                     role="progressbar" 
-                                     style="width: {{ mobilization_width }}%" 
-                                     aria-valuenow="{{ mobilization_width }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
-                                    {{ route.mobilization_index }}/3
-                                </div>
-                            </div>
-                            
-                            <div class="progress mb-3">
-                                {% set conviction_width = (route.conviction_index/3*100)|round %}
-                                <div class="progress-bar bg-danger" 
-                                     role="progressbar" 
-                                     style="width: {{ conviction_width }}%" 
-                                     aria-valuenow="{{ conviction_width }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
-                                    {{ route.conviction_index }}/3
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            {% if route.households %}
-                            <div class="stats-card p-3 mb-3">
-                                <h6><i class="fas fa-home text-info"></i> Haushalte</h6>
-                                <p class="display-4 mb-0">{{ route.households }}</p>
-                                <small class="text-muted">Geschätzte Anzahl der Haushalte</small>
-                            </div>
-                            {% endif %}
-                            
-                            {% if route.rental_percentage %}
-                            <div class="stats-card p-3">
-                                <h6><i class="fas fa-key text-warning"></i> Mietquote</h6>
-                                <p class="display-4 mb-0">{{ "%.1f"|format(route.rental_percentage) }}%</p>
-                                <small class="text-muted">Anteil der Mietwohnungen</small>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="highlight-box">
-                    <h5><i class="fas fa-route text-primary"></i> Routendetails</h5>
-                    <p class="lead">
-                        Diese Route wurde speziell für einen effizienten Tür-zu-Tür-Wahlkampf optimiert.
-                        Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz ausgelegt.
-                    </p>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent">
-                                    <i class="fas fa-clock text-info"></i> Zeitbedarf: 2 Stunden
-                                </li>
-                                <li class="list-group-item bg-transparent">
-                                    <i class="fas fa-door-open text-success"></i> Geplante Gespräche: 10 Türen
-                                </li>
-                                <li class="list-group-item bg-transparent">
-                                    <i class="fas fa-walking text-primary"></i> Empfohlene Gehrichtung: 
-                                    <br>von {{ route.house_numbers.split('-')[0] }} 
-                                    bis {{ route.house_numbers.split('-')[1] }}
-                                </li>
-                                {% if route.meeting_point %}
-                                <li class="list-group-item bg-transparent">
-                                    <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
-                                    <br>{{ route.meeting_point }}
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="mb-3">Beste Besuchszeiten:</h6>
-                            <span class="time-slot-badge">
-                                <i class="fas fa-sun"></i> Werktags 17-19 Uhr
-                            </span>
-                            <span class="time-slot-badge">
-                                <i class="fas fa-coffee"></i> Samstags 11-13 Uhr
-                            </span>
-                        </div>
+        <div class="route-stats">
+            <div class="stat-card">
+                <h3>Mobilisierungsindex</h3>
+                <div class="progress">
+                    <div class="progress-bar" 
+                         role="progressbar" 
+                         style="width: {{ (route.mobilization_index/3*100)|round }}%">
+                        {{ route.mobilization_index }}/3
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-map"></i> Interaktive Karte</h5>
-                <div id="map"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-calendar-alt text-primary"></i> Termine
-                </h5>
-                {% if registrations %}
-                <div class="list-group">
-                    {% for reg in registrations %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">
-                                    <i class="fas fa-user text-info"></i> 
-                                    {{ reg.volunteer.name }}
-                                </h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-calendar"></i> 
-                                    {{ reg.date.strftime('%d.%m.%Y') }}
-                                    <br>
-                                    <i class="fas fa-clock"></i> 
-                                    {{ reg.time_slot }}
-                                </small>
-                            </div>
-                            <span class="badge bg-success">Bestätigt</span>
-                        </div>
+            <div class="stat-card">
+                <h3>Überzeugungsindex</h3>
+                <div class="progress">
+                    <div class="progress-bar" 
+                         role="progressbar" 
+                         style="width: {{ (route.conviction_index/3*100)|round }}%">
+                        {{ route.conviction_index }}/3
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-calendar-plus text-muted fa-3x mb-3"></i>
-                    <p class="lead">Noch keine Termine gebucht</p>
-                    <p class="text-muted">Sei der Erste, der diese Route übernimmt!</p>
-                </div>
-                {% endif %}
-                <a href="{{ url_for('register') }}?route={{ route.id }}" 
-                   class="btn btn-primary btn-lg mt-3 w-100">
-                    <i class="fas fa-plus"></i> Termin buchen
-                </a>
             </div>
+            {% if route.households %}
+            <div class="stat-card">
+                <h3>Haushalte</h3>
+                <p>{{ route.households }}</p>
+            </div>
+            {% endif %}
+            {% if route.rental_percentage %}
+            <div class="stat-card">
+                <h3>Mietquote</h3>
+                <p>{{ "%.1f"|format(route.rental_percentage) }}%</p>
+            </div>
+            {% endif %}
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-info-circle text-info"></i> Kampagnen-Checkliste
-                </h5>
-                <div class="highlight-box">
-                    <h6><i class="fas fa-clipboard-check text-success"></i> Vorbereitung</h6>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Informationsmaterial</li>
-                        <li><i class="fas fa-check text-success"></i> Notizblock</li>
-                        <li><i class="fas fa-check text-success"></i> Kugelschreiber</li>
-                        <li><i class="fas fa-check text-success"></i> Wasser</li>
-                        <li><i class="fas fa-check text-success"></i> Smartphone mit Powerbank</li>
-                    </ul>
-                </div>
-                
-                <div class="highlight-box mt-3">
-                    <h6><i class="fas fa-lightbulb text-warning"></i> Tipps für erfolgreiche Gespräche</h6>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><i class="fas fa-angle-right"></i> Freundlich und respektvoll auftreten</li>
-                        <li class="mb-2"><i class="fas fa-angle-right"></i> Aktiv zuhören</li>
-                        <li class="mb-2"><i class="fas fa-angle-right"></i> Kurz und prägnant kommunizieren</li>
-                        <li><i class="fas fa-angle-right"></i> Kontaktdaten für Rückfragen anbieten</li>
-                    </ul>
+        <div class="map-container" id="map"></div>
+
+        <div class="registration-section">
+            <h2>Registrierungen</h2>
+            {% if registrations %}
+            {% for reg in registrations %}
+            <div class="registration-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ reg.volunteer.name }}</h5>
+                        <p class="text-muted mb-0">{{ reg.date.strftime('%d.%m.%Y') }} - {{ reg.time_slot }}</p>
+                    </div>
+                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ reg.status }}
+                    </span>
                 </div>
             </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">Noch keine Registrierungen für diese Route.</p>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    function initMap() {
-        const mapLat = parseFloat('{{ route.lat }}');
-        const mapLon = parseFloat('{{ route.lon }}');
-        
-        if (!isNaN(mapLat) && !isNaN(mapLon)) {
-            const mapCenter = [mapLat, mapLon];
-            const map = L.map('map').setView(mapCenter, 15);
-            
-            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={{ mapbox_token }}', {
-                attribution: '© OpenStreetMap',
-                maxZoom: 18,
-                id: 'mapbox/streets-v11',
-                tileSize: 512,
-                zoomOffset: -1
-            }).addTo(map);
-            
-            var markerText = "{{ route.street|e }} {{ route.house_numbers|e }}<br>{{ route.city|e }}";
-            var marker = L.marker(mapCenter);
-            marker.addTo(map);
-            marker.bindPopup(markerText);
-            marker.openPopup();
-            
-            {% if route.meeting_point and route.meeting_point_lat and route.meeting_point_lon %}
-            var meetingPoint = [{{ route.meeting_point_lat|float }}, {{ route.meeting_point_lon|float }}];
-            var meetingPointIcon = L.divIcon({
-                className: "meeting-point-marker",
-                html: '<i class="fas fa-flag" style="color: #E3000F; font-size: 24px;"></i>',
-                iconSize: [24, 24],
-                iconAnchor: [12, 24]
-            });
-            var meetingPointMarker = L.marker(meetingPoint, { icon: meetingPointIcon });
-            meetingPointMarker.addTo(map);
-            meetingPointMarker.bindPopup("<strong>Treffpunkt:</strong><br>{{ route.meeting_point|e }}");
-            {% endif %}
-            
-            var routeCircle = L.circle(mapCenter, {
-                radius: 200,
-                color: "#E3000F",
-                fillColor: "#E3000F",
-                fillOpacity: 0.1
-            });
-            routeCircle.addTo(map);
-            
-            var routeCoordinates = [];
-            
-            {% if route.city and route.street %}
-                {% if route.city == 'Moers' and route.street == 'Niephauser Straße' %}
-                    routeCoordinates = [
-                        [51.451, 6.626],
-                        [51.4515, 6.6265],
-                        [51.452, 6.627],
-                        [51.4525, 6.6275]
-                    ];
-                {% elif route.city == 'Moers' and route.street == 'Windmühlenstraße' %}
-                    routeCoordinates = [
-                        [51.449, 6.623],
-                        [51.4495, 6.6235],
-                        [51.450, 6.624],
-                        [51.4505, 6.6245]
-                    ];
-                {% elif route.city == 'Krefeld' and route.street == 'Gubener Straße' %}
-                    routeCoordinates = [
-                        [51.333, 6.564],
-                        [51.3335, 6.5645],
-                        [51.334, 6.565],
-                        [51.3345, 6.5655]
-                    ];
-                {% endif %}
-            {% endif %}
-            
-            if (routeCoordinates && routeCoordinates.length > 0) {
-                var routePath = L.polyline(routeCoordinates, {
-                    color: "#E3000F",
-                    weight: 4,
-                    opacity: 0.8
-                });
-                routePath.addTo(map);
-            }
-            
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 100);
-        } else {
-            document.getElementById('map').innerHTML = 
-                '<div class="alert">Kartenposition konnte nicht geladen werden.</div>';
-        }
-    }
-    
-    try {
-        initMap();
-    } catch (error) {
-        console.error('Fehler beim Laden der Karte:', error);
-        document.getElementById('map').innerHTML = 
-            '<div class="alert">Karte konnte nicht geladen werden.</div>';
-    }
+    mapboxgl.accessToken = '{{ mapbox_token }}';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [{{ route.lon }}, {{ route.lat }}],
+        zoom: 15
+    });
+
+    // Füge Marker für die Route hinzu
+    new mapboxgl.Marker()
+        .setLngLat([{{ route.lon }}, {{ route.lat }}])
+        .addTo(map);
+
+    // Füge Marker für den Treffpunkt hinzu
+    {% if route.meeting_point_lat and route.meeting_point_lon %}
+    new mapboxgl.Marker({ color: '#E3000F' })
+        .setLngLat([{{ route.meeting_point_lon }}, {{ route.meeting_point_lat }}])
+        .setPopup(new mapboxgl.Popup().setHTML('<h6>Treffpunkt</h6><p>{{ route.meeting_point }}</p>'))
+        .addTo(map);
+    {% endif %}
 });
 </script>
 {% endblock %} 

@@ -117,6 +117,50 @@
         font-size: 1rem;
         margin: 0;
     }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: var(--spd-red);
+        color: white;
+        border-bottom: none;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        border-top: none;
+        border-bottom: 2px solid var(--spd-red);
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-group {
+        gap: 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -262,7 +306,6 @@ function toggleRouteStatus(routeId, button) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Aktualisiere den Button-Text und die Klasse
             if (data.is_active) {
                 button.textContent = 'Deaktivieren';
                 button.classList.remove('btn-success');
@@ -276,7 +319,6 @@ function toggleRouteStatus(routeId, button) {
                 button.closest('tr').querySelector('.badge').className = 'badge bg-danger';
                 button.closest('tr').querySelector('.badge').textContent = 'Inaktiv';
             }
-            // Zeige eine Erfolgsmeldung
             showAlert('success', data.message);
         } else {
             showAlert('danger', data.error || 'Ein Fehler ist aufgetreten');
@@ -320,7 +362,6 @@ function showAlert(type, message) {
     `;
     document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
     
-    // Automatisch ausblenden nach 3 Sekunden
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
