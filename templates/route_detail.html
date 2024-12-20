@@ -326,13 +326,16 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap" async defer></script>
 <script>
     function initMap() {
-        // Koordinaten für den Mittelpunkt der Route
-        const center = { lat: 51.4512, lng: 6.6382 }; // Moers Zentrum
+        // Koordinaten für die Route
+        const routeCenter = { 
+            lat: {{ route.lat|default(51.4512) }}, 
+            lng: {{ route.lon|default(6.6382) }} 
+        };
         
         // Kartenoptionen
         const mapOptions = {
-            zoom: 14,
-            center: center,
+            zoom: 15,
+            center: routeCenter,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             styles: [
                 {
@@ -346,20 +349,58 @@
         // Karte erstellen
         const map = new google.maps.Map(document.getElementById('map'), mapOptions);
         
+        // Marker für die Route
+        const routeMarker = new google.maps.Marker({
+            position: routeCenter,
+            map: map,
+            title: '{{ route.street }}',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: "#E3000F",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff"
+            }
+        });
+
+        // Info-Window für die Route
+        const routeInfo = new google.maps.InfoWindow({
+            content: '<div style="padding: 10px;">' +
+                     '<h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>' +
+                     '<p style="margin: 0;">{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>' +
+                     '</div>'
+        });
+
+        routeMarker.addListener('click', () => {
+            routeInfo.open(map, routeMarker);
+        });
+        
         // Marker für den Treffpunkt
-        {% if route.meeting_point %}
+        {% if route.meeting_point and route.meeting_point_lat and route.meeting_point_lon %}
         const meetingPoint = new google.maps.Marker({
-            position: center, // TODO: Echte Koordinaten verwenden
+            position: { 
+                lat: {{ route.meeting_point_lat }}, 
+                lng: {{ route.meeting_point_lon }} 
+            },
             map: map,
             title: 'Treffpunkt',
             icon: {
-                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 6,
+                fillColor: "#E3000F",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff"
             }
         });
         
         // Info-Window für den Treffpunkt
         const meetingPointInfo = new google.maps.InfoWindow({
-            content: '<div><strong>Treffpunkt</strong><br>{{ route.meeting_point }}</div>'
+            content: '<div style="padding: 10px;">' +
+                     '<h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>' +
+                     '<p style="margin: 0;">{{ route.meeting_point }}</p>' +
+                     '</div>'
         });
         
         meetingPoint.addListener('click', () => {
@@ -367,18 +408,53 @@
         });
         {% endif %}
         
-        // TODO: Route zeichnen, wenn Koordinaten vorhanden sind
-        {% if route.path_coordinates %}
-        const routePath = new google.maps.Polyline({
-            path: {{ route.path_coordinates|tojson }},
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
+        // Routenvisualisierung
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true,  // Verstecke die Standard-Marker
+            polylineOptions: {
+                strokeColor: '#E3000F',
+                strokeOpacity: 0.8,
+                strokeWeight: 5
+            }
         });
+
+        // Extrahiere Start- und Endnummer aus house_numbers
+        const [startNum, endNum] = '{{ route.house_numbers }}'.split('-').map(num => parseInt(num.trim()));
         
-        routePath.setMap(map);
-        {% endif %}
+        // Erstelle Start- und Endadressen
+        const startAddress = `{{ route.street }} ${startNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
+        const endAddress = `{{ route.street }} ${endNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
+
+        // Berechne die Route
+        directionsService.route({
+            origin: startAddress,
+            destination: endAddress,
+            travelMode: google.maps.TravelMode.WALKING
+        }, (response, status) => {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(response);
+                
+                // Speichere die Routenkoordinaten
+                const path = response.routes[0].overview_path;
+                const coordinates = path.map(point => ({
+                    lat: point.lat(),
+                    lng: point.lng()
+                }));
+                
+                // Optional: Speichere die Koordinaten in der Datenbank
+                fetch(`/api/routes/{{ route.id }}/path`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ coordinates: coordinates })
+                });
+            } else {
+                console.error('Directions request failed due to ' + status);
+            }
+        });
     }
 </script>
 {% endblock %} 
