@@ -176,239 +176,209 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="route-detail-card">
-        <div class="route-header">
-            <h1>{{ route.street }}</h1>
-            <p>{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>
-        </div>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Routendetails -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="route-detail-card">
+                        <div class="route-header">
+                            <h1>{{ route.street }}</h1>
+                            <p>{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>
+                        </div>
 
-        <div class="route-stats">
-            <div class="stat-card">
-                <h3>Mobilisierungsindex</h3>
-                <div class="progress">
-                    <div class="progress-bar" 
-                         role="progressbar" 
-                         style="width: {{ (route.mobilization_index/3*100)|round }}%">
-                        {{ route.mobilization_index }}/3
+                        <div class="route-stats">
+                            <div class="stat-card">
+                                <h3>Mobilisierungsindex</h3>
+                                <div class="progress">
+                                    <div class="progress-bar" 
+                                         role="progressbar" 
+                                         style="width: {{ (route.mobilization_index/3*100)|round }}%">
+                                        {{ route.mobilization_index }}/3
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Überzeugungsindex</h3>
+                                <div class="progress">
+                                    <div class="progress-bar" 
+                                         role="progressbar" 
+                                         style="width: {{ (route.conviction_index/3*100)|round }}%">
+                                        {{ route.conviction_index }}/3
+                                    </div>
+                                </div>
+                            </div>
+                            {% if route.households %}
+                            <div class="stat-card">
+                                <h3>Haushalte</h3>
+                                <p>{{ route.households }}</p>
+                            </div>
+                            {% endif %}
+                            {% if route.rental_percentage %}
+                            <div class="stat-card">
+                                <h3>Mietquote</h3>
+                                <p>{{ "%.1f"|format(route.rental_percentage) }}%</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="highlight-box">
+                            <h5><i class="fas fa-route text-primary"></i> Routendetails</h5>
+                            <p class="lead">
+                                Diese Route wurde für Jan Dierens Haustürwahlkampf 2025 optimiert.
+                                Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz im Zweierteam ausgelegt.
+                                Gemeinsam sprechen wir mit den Menschen über bezahlbares Wohnen, gute Arbeit und die Zukunft unserer Region.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item bg-transparent">
+                                            <i class="fas fa-clock text-info"></i> Zeitbedarf: 2 Stunden
+                                        </li>
+                                        <li class="list-group-item bg-transparent">
+                                            <i class="fas fa-door-open text-success"></i> Geplante Gespräche: 10-15 Haushalte
+                                        </li>
+                                        <li class="list-group-item bg-transparent">
+                                            <i class="fas fa-walking text-primary"></i> Empfohlene Gehrichtung: 
+                                            <br>von {{ route.house_numbers.split('-')[0] }} 
+                                            bis {{ route.house_numbers.split('-')[1] }}
+                                        </li>
+                                        {% if route.meeting_point %}
+                                        <li class="list-group-item bg-transparent">
+                                            <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
+                                            <br>{{ route.meeting_point }}
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-3">Beste Besuchszeiten:</h6>
+                                    <span class="time-slot-badge">
+                                        <i class="fas fa-sun"></i> Werktags 17-19 Uhr
+                                    </span>
+                                    <span class="time-slot-badge">
+                                        <i class="fas fa-coffee"></i> Samstags 11-13 Uhr
+                                    </span>
+                                    <div class="mt-4">
+                                        <p class="text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Du erhältst vor deinem Einsatz eine kurze Einführung und alle wichtigen Materialien. 
+                                            Jan wird regelmäßig selbst mit dabei sein!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="registration-section">
+                            <h2>Registrierungen</h2>
+                            {% if registrations %}
+                            {% for reg in registrations %}
+                            <div class="registration-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">{{ reg.volunteer.name }}</h5>
+                                        <p class="text-muted mb-0">{{ reg.date.strftime('%d.%m.%Y') }} - {{ reg.time_slot }}</p>
+                                    </div>
+                                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ reg.status }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted">Noch keine Registrierungen für diese Route.</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <h3>Überzeugungsindex</h3>
-                <div class="progress">
-                    <div class="progress-bar" 
-                         role="progressbar" 
-                         style="width: {{ (route.conviction_index/3*100)|round }}%">
-                        {{ route.conviction_index }}/3
-                    </div>
-                </div>
-            </div>
-            {% if route.households %}
-            <div class="stat-card">
-                <h3>Haushalte</h3>
-                <p>{{ route.households }}</p>
-            </div>
-            {% endif %}
-            {% if route.rental_percentage %}
-            <div class="stat-card">
-                <h3>Mietquote</h3>
-                <p>{{ "%.1f"|format(route.rental_percentage) }}%</p>
-            </div>
-            {% endif %}
-        </div>
 
-        <div class="highlight-box">
-            <h5><i class="fas fa-route text-primary"></i> Routendetails</h5>
-            <p class="lead">
-                Diese Route wurde speziell für einen effizienten Tür-zu-Tür-Wahlkampf optimiert.
-                Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz ausgelegt.
-            </p>
-            <div class="row">
-                <div class="col-md-6">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item bg-transparent">
-                            <i class="fas fa-clock text-info"></i> Zeitbedarf: 2 Stunden
-                        </li>
-                        <li class="list-group-item bg-transparent">
-                            <i class="fas fa-door-open text-success"></i> Geplante Gespräche: 10-15 Türen
-                        </li>
-                        <li class="list-group-item bg-transparent">
-                            <i class="fas fa-walking text-primary"></i> Empfohlene Gehrichtung: 
-                            <br>von {{ route.house_numbers.split('-')[0] }} 
-                            bis {{ route.house_numbers.split('-')[1] }}
-                        </li>
-                        {% if route.meeting_point %}
-                        <li class="list-group-item bg-transparent">
-                            <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
-                            <br>{{ route.meeting_point }}
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="mb-3">Beste Besuchszeiten:</h6>
-                    <span class="time-slot-badge">
-                        <i class="fas fa-sun"></i> Werktags 17-19 Uhr
-                    </span>
-                    <span class="time-slot-badge">
-                        <i class="fas fa-coffee"></i> Samstags 11-13 Uhr
-                    </span>
+            <!-- Google Maps Container -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div id="map" style="height: 400px; width: 100%;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="map-container" id="map"></div>
-
-        <div class="registration-section">
-            <h2>Registrierungen</h2>
-            {% if registrations %}
-            {% for reg in registrations %}
-            <div class="registration-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-1">{{ reg.volunteer.name }}</h5>
-                        <p class="text-muted mb-0">{{ reg.date.strftime('%d.%m.%Y') }} - {{ reg.time_slot }}</p>
+        <div class="col-md-4">
+            <!-- Aktionsbuttons -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Aktionen</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="reserveRoute({{ route.id }})">
+                            Route reservieren
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="window.history.back()">
+                            Zurück zur Übersicht
+                        </button>
                     </div>
-                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
-                        {{ reg.status }}
-                    </span>
                 </div>
             </div>
-            {% endfor %}
-            {% else %}
-            <p class="text-muted">Noch keine Registrierungen für diese Route.</p>
-            {% endif %}
         </div>
     </div>
 </div>
 
+<!-- Google Maps Script -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap" async defer></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialisiere die Google Map
-    const map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: {{ route.lat }}, lng: {{ route.lon }} },
-        zoom: 15,
-        styles: [
-            {
-                "featureType": "all",
-                "elementType": "geometry",
-                "stylers": [{ "color": "#f5f5f5" }]
-            },
-            {
-                "featureType": "road",
-                "elementType": "geometry",
-                "stylers": [{ "color": "#ffffff" }]
+    function initMap() {
+        // Koordinaten für den Mittelpunkt der Route
+        const center = { lat: 51.4512, lng: 6.6382 }; // Moers Zentrum
+        
+        // Kartenoptionen
+        const mapOptions = {
+            zoom: 14,
+            center: center,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            styles: [
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
+                }
+            ]
+        };
+        
+        // Karte erstellen
+        const map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        
+        // Marker für den Treffpunkt
+        {% if route.meeting_point %}
+        const meetingPoint = new google.maps.Marker({
+            position: center, // TODO: Echte Koordinaten verwenden
+            map: map,
+            title: 'Treffpunkt',
+            icon: {
+                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
             }
-        ]
-    });
-
-    // Marker für die Route
-    const routeMarker = new google.maps.Marker({
-        position: { lat: {{ route.lat }}, lng: {{ route.lon }} },
-        map: map,
-        title: '{{ route.street }}',
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#E3000F",
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: "#ffffff"
-        }
-    });
-
-    // Info-Window für die Route
-    const routeInfo = new google.maps.InfoWindow({
-        content: '<div style="padding: 10px;">' +
-                 '<h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>' +
-                 '<p style="margin: 0;">{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>' +
-                 '</div>'
-    });
-
-    routeMarker.addListener('click', () => {
-        routeInfo.open(map, routeMarker);
-    });
-
-    {% if route.meeting_point_lat and route.meeting_point_lon %}
-    // Marker für den Treffpunkt
-    const meetingPointMarker = new google.maps.Marker({
-        position: { 
-            lat: {{ route.meeting_point_lat }}, 
-            lng: {{ route.meeting_point_lon }} 
-        },
-        map: map,
-        title: 'Treffpunkt',
-        icon: {
-            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: "#E3000F",
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: "#ffffff"
-        }
-    });
-
-    // Info-Window für den Treffpunkt
-    const meetingPointInfo = new google.maps.InfoWindow({
-        content: '<div style="padding: 10px;">' +
-                 '<h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>' +
-                 '<p style="margin: 0;">{{ route.meeting_point }}</p>' +
-                 '</div>'
-    });
-
-    meetingPointMarker.addListener('click', () => {
-        meetingPointInfo.open(map, meetingPointMarker);
-    });
-    {% endif %}
-
-    // Routenvisualisierung
-    const directionsService = new google.maps.DirectionsService();
-    const directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: true,  // Verstecke die Standard-Marker
-        polylineOptions: {
-            strokeColor: '#E3000F',
-            strokeOpacity: 0.8,
-            strokeWeight: 5
-        }
-    });
-
-    // Extrahiere Start- und Endnummer aus house_numbers
-    const [startNum, endNum] = '{{ route.house_numbers }}'.split('-').map(num => parseInt(num.trim()));
-    
-    // Erstelle Start- und Endadressen
-    const startAddress = `{{ route.street }} ${startNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
-    const endAddress = `{{ route.street }} ${endNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
-
-    // Berechne die Route
-    directionsService.route({
-        origin: startAddress,
-        destination: endAddress,
-        travelMode: google.maps.TravelMode.WALKING
-    }, (response, status) => {
-        if (status === 'OK') {
-            directionsRenderer.setDirections(response);
-            
-            // Speichere die Routenkoordinaten
-            const path = response.routes[0].overview_path;
-            const coordinates = path.map(point => ({
-                lat: point.lat(),
-                lng: point.lng()
-            }));
-            
-            // Optional: Speichere die Koordinaten in der Datenbank
-            fetch(`/api/routes/{{ route.id }}/path`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ coordinates: coordinates })
-            });
-        } else {
-            console.error('Directions request failed due to ' + status);
-        }
-    });
-});
+        });
+        
+        // Info-Window für den Treffpunkt
+        const meetingPointInfo = new google.maps.InfoWindow({
+            content: '<div><strong>Treffpunkt</strong><br>{{ route.meeting_point }}</div>'
+        });
+        
+        meetingPoint.addListener('click', () => {
+            meetingPointInfo.open(map, meetingPoint);
+        });
+        {% endif %}
+        
+        // TODO: Route zeichnen, wenn Koordinaten vorhanden sind
+        {% if route.path_coordinates %}
+        const routePath = new google.maps.Polyline({
+            path: {{ route.path_coordinates|tojson }},
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+        
+        routePath.setMap(map);
+        {% endif %}
+    }
 </script>
 {% endblock %} 
