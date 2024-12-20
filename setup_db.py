@@ -1,30 +1,64 @@
-from app import app, db, User, Route
-from migrations.add_meeting_point import upgrade as upgrade_meeting_point
-from migrations.add_max_volunteers import upgrade as upgrade_max_volunteers
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash
+from datetime import datetime
+import os
 
-def init_db():
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'neue_daten.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+class Route(db.Model):
+    __tablename__ = 'route'
+    id = db.Column(db.Integer, primary_key=True)
+    city = db.Column(db.String(100), nullable=False)
+    street = db.Column(db.String(200), nullable=False)
+    house_numbers = db.Column(db.String(50), nullable=False)
+    mobilization_index = db.Column(db.Integer, nullable=False)
+    conviction_index = db.Column(db.Integer, nullable=False)
+    households = db.Column(db.Integer)
+    rental_percentage = db.Column(db.Float)
+    lat = db.Column(db.Float, nullable=False)
+    lon = db.Column(db.Float, nullable=False)
+    meeting_point = db.Column(db.String(500))
+    meeting_point_lat = db.Column(db.Float)
+    meeting_point_lon = db.Column(db.Float)
+    max_volunteers = db.Column(db.Integer, default=4)
+    is_active = db.Column(db.Boolean, default=True)
+
+def setup_db():
     with app.app_context():
         # Erstelle alle Tabellen
         db.create_all()
         print("Tabellen wurden erstellt")
         
-        # Erstelle Admin-Benutzer, wenn noch keiner existiert
+        # Erstelle Admin-Benutzer
         admin = User.query.filter_by(username='admin').first()
         if not admin:
-            admin = User(
-                username='admin',
-                is_admin=True
-            )
+            admin = User(username='admin', is_admin=True)
             admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
             print("Admin-Benutzer wurde erstellt")
             print("Username: admin")
             print("Passwort: admin123")
+        else:
+            print("Admin-Benutzer existiert bereits")
         
-        # Füge Routen hinzu, wenn noch keine existieren
+        # Erstelle Beispielrouten
         if Route.query.count() == 0:
-            print("Füge initiale Routen hinzu...")
             routes = [
                 Route(
                     city='Moers',
@@ -77,27 +111,11 @@ def init_db():
                 db.session.add(route)
             
             db.session.commit()
-            print("Initiale Routen wurden hinzugefügt")
+            print("Routen wurden erstellt")
         else:
             print("Routen existieren bereits")
         
         print("Datenbankinitialisierung abgeschlossen")
 
 if __name__ == '__main__':
-    init_db()
-
-# Führe Migrationen aus
-with app.app_context():
-    try:
-        upgrade_meeting_point()
-        print("✓ Meeting Point Migration erfolgreich")
-    except Exception as e:
-        print(f"× Meeting Point Migration fehlgeschlagen: {str(e)}")
-    
-    try:
-        upgrade_max_volunteers()
-        print("✓ Max Volunteers Migration erfolgreich")
-    except Exception as e:
-        print(f"× Max Volunteers Migration fehlgeschlagen: {str(e)}")
-
-print("Datenbankinitialisierung abgeschlossen") 
+    setup_db() 

@@ -9,13 +9,14 @@ from folium import plugins
 import pandas as pd
 import numpy as np
 from sqlalchemy import func
-from models import db, Route, Volunteer, RouteRegistration, WohnquartierAnalyse
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from models import db, Route, Volunteer, RouteRegistration, WohnquartierAnalyse, User
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///neue_daten.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 
 # E-Mail-Konfiguration
@@ -27,23 +28,8 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
 app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'Fedo.Hagge-Kubat@fu-berlin.de')
 
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
-
 db.init_app(app)
 mail = Mail(app)
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -52,6 +38,10 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Erstelle die Datenbank und Tabellen
+with app.app_context():
+    db.create_all()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -134,6 +124,20 @@ def init_db():
         db.create_all()
         print("Tabellen wurden erstellt")
         
+        # Erstelle Admin-Benutzer, wenn noch keiner existiert
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(
+                username='admin',
+                is_admin=True
+            )
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+            print("Admin-Benutzer wurde erstellt")
+            print("Username: admin")
+            print("Passwort: admin123")
+        
         # Füge Routen hinzu, wenn noch keine existieren
         if Route.query.count() == 0:
             print("Füge initiale Routen hinzu...")
@@ -150,7 +154,8 @@ def init_db():
                     lon=6.626,
                     meeting_point="Vor dem Kiosk an der Ecke Niephauser Straße 81",
                     meeting_point_lat=51.451,
-                    meeting_point_lon=6.626
+                    meeting_point_lon=6.626,
+                    is_active=True
                 ),
                 Route(
                     city='Moers',
@@ -164,7 +169,8 @@ def init_db():
                     lon=6.623,
                     meeting_point="Am Parkplatz Windmühlenstraße 59",
                     meeting_point_lat=51.449,
-                    meeting_point_lon=6.623
+                    meeting_point_lon=6.623,
+                    is_active=True
                 ),
                 Route(
                     city='Krefeld',
@@ -178,7 +184,8 @@ def init_db():
                     lon=6.564,
                     meeting_point="Vor dem Spielplatz Gubener Straße 1",
                     meeting_point_lat=51.333,
-                    meeting_point_lon=6.564
+                    meeting_point_lon=6.564,
+                    is_active=True
                 )
             ]
             
