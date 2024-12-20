@@ -19,6 +19,7 @@ class Route(db.Model):
     meeting_point_lon = db.Column(db.Float)
     registrations = db.relationship('RouteRegistration', backref='route', lazy=True)
     max_volunteers = db.Column(db.Integer, default=4)
+    is_active = db.Column(db.Boolean, default=True)
 
     def get_registration_stats(self):
         """Berechnet Statistiken für die Routenregistrierungen"""

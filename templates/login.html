@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --spd-red: #E3000F;
+        --spd-dark-red: #A41D21;
+        --spd-gray: #878787;
+        --spd-light-gray: #f5f5f5;
+        --spd-white: #ffffff;
+    }
+
+    .login-container {
+        max-width: 400px;
+        margin: 2rem auto;
+    }
+
+    .login-card {
+        background: var(--spd-white);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
+        padding: 2rem;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-header i {
+        font-size: 3rem;
+        color: var(--spd-red);
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        border-radius: 25px;
+        padding: 0.75rem 1.25rem;
+        border: 2px solid var(--spd-light-gray);
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: var(--spd-red);
+        box-shadow: 0 0 0 0.2rem rgba(227, 0, 15, 0.25);
+    }
+
+    .btn-login {
+        background-color: var(--spd-red);
+        border-color: var(--spd-red);
+        color: white;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .btn-login:hover {
+        background-color: var(--spd-dark-red);
+        border-color: var(--spd-dark-red);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: none;
+    }
+
+    .alert-danger {
+        background-color: rgba(227, 0, 15, 0.1);
+        color: var(--spd-dark-red);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fas fa-shield-alt"></i>
+            <h2>Admin Login</h2>
+            <p class="text-muted">Bitte melden Sie sich an</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="username" class="form-label">Benutzername</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="username" 
+                       name="username" 
+                       required 
+                       autocomplete="username">
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label">Passwort</label>
+                <input type="password" 
+                       class="form-control" 
+                       id="password" 
+                       name="password" 
+                       required 
+                       autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-login">
+                <i class="fas fa-sign-in-alt me-2"></i> Anmelden
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

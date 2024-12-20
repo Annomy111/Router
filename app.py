@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import func
 from models import db, Route, Volunteer, RouteRegistration, WohnquartierAnalyse
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
@@ -30,6 +32,102 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
 
 db.init_app(app)
 mail = Mail(app)
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('admin_panel'))
+        flash('Ungültige Anmeldedaten')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/admin')
+@login_required
+def admin_panel():
+    if not current_user.is_admin:
+        flash('Keine Berechtigung für diese Seite')
+        return redirect(url_for('index'))
+        
+    stats = {
+        'total_routes': Route.query.filter_by(is_active=True).count(),
+        'total_volunteers': Volunteer.query.count(),
+        'total_registrations': RouteRegistration.query.count(),
+        'completion_rate': calculate_completion_rate()
+    }
+    
+    routes = Route.query.all()
+    registrations = RouteRegistration.query.order_by(RouteRegistration.date.desc()).all()
+    
+    return render_template('admin_panel.html', 
+                         stats=stats,
+                         routes=routes,
+                         registrations=registrations)
+
+def calculate_completion_rate():
+    total = RouteRegistration.query.count()
+    if total == 0:
+        return 0
+    completed = RouteRegistration.query.filter_by(status='abgeschlossen').count()
+    return round((completed / total) * 100)
+
+@app.route('/api/routes/<int:route_id>/toggle', methods=['POST'])
+@login_required
+def toggle_route_status(route_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Keine Berechtigung'}), 403
+        
+    route = Route.query.get_or_404(route_id)
+    route.is_active = not route.is_active
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@app.route('/api/registrations/<int:reg_id>/status', methods=['POST'])
+@login_required
+def update_registration_status(reg_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Keine Berechtigung'}), 403
+        
+    registration = RouteRegistration.query.get_or_404(reg_id)
+    data = request.get_json()
+    
+    if data.get('status') in ['geplant', 'abgeschlossen', 'abgesagt']:
+        registration.status = data['status']
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'error': 'Ungültiger Status'})
 
 def init_db():
     with app.app_context():
