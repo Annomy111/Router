@@ -272,7 +272,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+<div class="modal" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -473,11 +473,20 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById('registrationModal')).hide();
-                setTimeout(() => {
-                    alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
-                    location.reload();
-                }, 200);
+                // Modal schließen
+                const modal = document.getElementById('registrationModal');
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                modalInstance.hide();
+                
+                // Backdrop und Modal-Klassen entfernen
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                
+                // Erfolgsmeldung und Seite neu laden
+                alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
+                window.location.reload();
             } else {
                 alert(data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
             }
@@ -488,18 +497,26 @@
         });
     }
 
+    // Modal-Initialisierung
     document.addEventListener('DOMContentLoaded', function() {
-        const modalElement = document.getElementById('registrationModal');
-        const bsModal = new bootstrap.Modal(modalElement);
+        const modal = document.getElementById('registrationModal');
         
-        modalElement.addEventListener('hidden.bs.modal', function() {
+        // Event-Listener für das Schließen des Modals
+        modal.addEventListener('hide.bs.modal', function() {
+            // Backdrop und Modal-Klassen entfernen
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');
-            const backdrops = document.getElementsByClassName('modal-backdrop');
-            while(backdrops.length > 0) {
-                backdrops[0].remove();
-            }
-            document.body.style.paddingRight = '';
             document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+        
+        // Event-Listener für nach dem Schließen des Modals
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Sicherstellen, dass alle Modal-Effekte entfernt wurden
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         });
     });
 </script>
