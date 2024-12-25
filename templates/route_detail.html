@@ -272,15 +272,15 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="registrationModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="registrationModalLabel">Route reservieren</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm" onsubmit="submitRegistration(event)">
+                <form id="registrationForm" onsubmit="handleRegistration(event)">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="name" name="name" required>
@@ -451,10 +451,24 @@
         });
     }
 
-    function submitRegistration(event) {
+    let registrationModal;
+    
+    // Initialisiere Bootstrap-Komponenten
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal initialisieren
+        registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        // Form-Handler hinzufügen
+        document.getElementById('registrationForm').addEventListener('submit', handleRegistration);
+    });
+    
+    function handleRegistration(event) {
         event.preventDefault();
         
-        var formData = {
+        const formData = {
             name: document.getElementById('name').value,
             email: document.getElementById('email').value,
             phone: document.getElementById('phone').value,
@@ -474,19 +488,13 @@
         .then(data => {
             if (data.success) {
                 // Modal schließen
-                const modal = document.getElementById('registrationModal');
-                const modalInstance = bootstrap.Modal.getInstance(modal);
-                modalInstance.hide();
+                registrationModal.hide();
                 
-                // Backdrop und Modal-Klassen entfernen
-                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                
-                // Erfolgsmeldung und Seite neu laden
-                alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
-                window.location.reload();
+                // Warte kurz, bevor die Erfolgsmeldung gezeigt wird
+                setTimeout(() => {
+                    alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
+                    window.location.reload();
+                }, 300);
             } else {
                 alert(data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
             }
@@ -496,28 +504,22 @@
             alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
         });
     }
-
-    // Modal-Initialisierung
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('registrationModal');
+    
+    // Event-Handler für Modal-Events
+    document.getElementById('registrationModal').addEventListener('hidden.bs.modal', function() {
+        // Formular zurücksetzen
+        document.getElementById('registrationForm').reset();
         
-        // Event-Listener für das Schließen des Modals
-        modal.addEventListener('hide.bs.modal', function() {
-            // Backdrop und Modal-Klassen entfernen
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+        // Modal-Effekte entfernen
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
         
-        // Event-Listener für nach dem Schließen des Modals
-        modal.addEventListener('hidden.bs.modal', function() {
-            // Sicherstellen, dass alle Modal-Effekte entfernt wurden
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+        // Alle Backdrops entfernen
+        const backdrops = document.getElementsByClassName('modal-backdrop');
+        while (backdrops.length > 0) {
+            backdrops[0].parentNode.removeChild(backdrops[0]);
+        }
     });
 </script>
 {% endblock %} 
