@@ -514,6 +514,50 @@ def save_route_path(route_id):
     
     return jsonify({'success': False, 'error': 'Keine Koordinaten gefunden'}), 400
 
+@app.route('/api/register', methods=['POST'])
+def register_route():
+    data = request.get_json()
+    
+    # Erstelle oder hole den Freiwilligen
+    volunteer = Volunteer.query.filter_by(email=data['email']).first()
+    if not volunteer:
+        volunteer = Volunteer(
+            name=data['name'],
+            email=data['email'],
+            phone=data.get('phone')
+        )
+        db.session.add(volunteer)
+    
+    # Hole die Route
+    route = Route.query.get_or_404(data['route_id'])
+    
+    # Erstelle die Registrierung
+    registration = RouteRegistration(
+        route=route,
+        volunteer=volunteer,
+        date=datetime.strptime(data['date'], '%Y-%m-%d'),
+        time_slot=data['time_slot'],
+        status='geplant'
+    )
+    
+    try:
+        db.session.add(registration)
+        db.session.commit()
+        
+        # Sende Benachrichtigungs-E-Mail
+        send_registration_notification(volunteer, route, registration)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Registrierung erfolgreich'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001) 

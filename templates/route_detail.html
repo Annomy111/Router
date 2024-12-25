@@ -23,46 +23,15 @@
         padding: 2rem;
     }
 
-    .route-header {
-        margin-bottom: 2rem;
-    }
-
-    .route-header h1 {
-        color: var(--spd-dark-red);
-        margin-bottom: 0.5rem;
-    }
-
-    .route-header p {
-        color: var(--spd-gray);
-        font-size: 1.1rem;
-        margin-bottom: 0;
-    }
-
-    .route-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: var(--spd-light-gray);
-        padding: 1.5rem;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .stat-card h3 {
-        color: var(--spd-dark-red);
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-    }
-
-    .stat-card p {
-        color: var(--spd-gray);
-        margin-bottom: 0;
-        font-size: 2rem;
+    .progress-bar {
+        background-color: var(--spd-red);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--spd-white);
         font-weight: 600;
+        width: 0;
     }
 
     .progress {
@@ -70,107 +39,6 @@
         background-color: var(--spd-light-gray);
         border-radius: 10px;
         margin-bottom: 1rem;
-    }
-
-    .progress-bar {
-        background-color: var(--spd-red);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-    }
-
-    .map-container {
-        height: 400px;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 2rem;
-    }
-
-    .registration-section {
-        margin-top: 3rem;
-    }
-
-    .registration-section h2 {
-        color: var(--spd-dark-red);
-        margin-bottom: 1.5rem;
-    }
-
-    .registration-card {
-        background: var(--spd-white);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .registration-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-
-    .btn-register {
-        background-color: var(--spd-red);
-        color: white;
-        border: none;
-        padding: 1rem 2rem;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .btn-register:hover {
-        background-color: var(--spd-dark-red);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.2);
-    }
-
-    .highlight-box {
-        background-color: var(--spd-white);
-        border-left: 4px solid var(--spd-red);
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-        border-radius: 0 12px 12px 0;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
-    }
-
-    .time-slot-badge {
-        background-color: var(--spd-red);
-        color: var(--spd-white);
-        padding: 0.75rem 1.25rem;
-        border-radius: 25px;
-        font-size: 0.9rem;
-        margin: 0.5rem;
-        display: inline-block;
-        transition: all 0.3s;
-        box-shadow: 0 2px 6px rgba(227, 0, 15, 0.2);
-    }
-
-    .time-slot-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.3);
-        background-color: var(--spd-dark-red);
-    }
-
-    .list-group-item {
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        border: 1px solid rgba(227, 0, 15, 0.1);
-        transition: all 0.3s;
-    }
-
-    .list-group-item:hover {
-        background-color: var(--spd-light-gray);
-        transform: translateX(5px);
-        border-color: var(--spd-red);
     }
 </style>
 {% endblock %}
@@ -309,7 +177,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Aktionen</h5>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary" onclick="reserveRoute({{ route.id }})">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrationModal">
                             Route reservieren
                         </button>
                         <button class="btn btn-outline-secondary" onclick="window.history.back()">
@@ -322,35 +190,73 @@
     </div>
 </div>
 
+<!-- Registrierungs-Modal -->
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registrationModalLabel">Route reservieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registrationForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-Mail</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Telefon (optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Datum</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="timeSlot" class="form-label">Zeitfenster</label>
+                        <select class="form-select" id="timeSlot" name="timeSlot" required>
+                            <option value="">Bitte wählen...</option>
+                            <option value="17-19 Uhr">Werktags 17-19 Uhr</option>
+                            <option value="11-13 Uhr">Samstags 11-13 Uhr</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="submitRegistration()">Reservieren</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Google Maps Script -->
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap" async defer></script>
 <script>
     function initMap() {
-        // Koordinaten für die Route
-        const routeCenter = { 
-            lat: {{ route.lat|default(51.4512) }}, 
-            lng: {{ route.lon|default(6.6382) }} 
+        var routeCenter = {
+            lat: {{ route.lat|default(51.4512) }},
+            lng: {{ route.lon|default(6.6382) }}
         };
         
-        // Kartenoptionen
-        const mapOptions = {
+        var mapOptions = {
             zoom: 15,
             center: routeCenter,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
-            styles: [
-                {
-                    featureType: "poi",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                }
-            ]
+            styles: [{
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+            }]
         };
         
-        // Karte erstellen
-        const map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        var map = new google.maps.Map(document.getElementById('map'), mapOptions);
         
-        // Marker für die Route
-        const routeMarker = new google.maps.Marker({
+        var routeMarker = new google.maps.Marker({
             position: routeCenter,
             map: map,
             title: '{{ route.street }}',
@@ -364,24 +270,22 @@
             }
         });
 
-        // Info-Window für die Route
-        const routeInfo = new google.maps.InfoWindow({
+        var routeInfo = new google.maps.InfoWindow({
             content: '<div style="padding: 10px;">' +
-                     '<h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>' +
-                     '<p style="margin: 0;">{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>' +
-                     '</div>'
+                    '<h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>' +
+                    '<p style="margin: 0;">{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>' +
+                    '</div>'
         });
 
-        routeMarker.addListener('click', () => {
+        routeMarker.addListener('click', function() {
             routeInfo.open(map, routeMarker);
         });
         
-        // Marker für den Treffpunkt
         {% if route.meeting_point and route.meeting_point_lat and route.meeting_point_lon %}
-        const meetingPoint = new google.maps.Marker({
-            position: { 
-                lat: {{ route.meeting_point_lat }}, 
-                lng: {{ route.meeting_point_lon }} 
+        var meetingPoint = new google.maps.Marker({
+            position: {
+                lat: {{ route.meeting_point_lat }},
+                lng: {{ route.meeting_point_lon }}
             },
             map: map,
             title: 'Treffpunkt',
@@ -395,24 +299,22 @@
             }
         });
         
-        // Info-Window für den Treffpunkt
-        const meetingPointInfo = new google.maps.InfoWindow({
+        var meetingPointInfo = new google.maps.InfoWindow({
             content: '<div style="padding: 10px;">' +
-                     '<h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>' +
-                     '<p style="margin: 0;">{{ route.meeting_point }}</p>' +
-                     '</div>'
+                    '<h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>' +
+                    '<p style="margin: 0;">{{ route.meeting_point }}</p>' +
+                    '</div>'
         });
         
-        meetingPoint.addListener('click', () => {
+        meetingPoint.addListener('click', function() {
             meetingPointInfo.open(map, meetingPoint);
         });
         {% endif %}
         
-        // Routenvisualisierung
-        const directionsService = new google.maps.DirectionsService();
-        const directionsRenderer = new google.maps.DirectionsRenderer({
+        var directionsService = new google.maps.DirectionsService();
+        var directionsRenderer = new google.maps.DirectionsRenderer({
             map: map,
-            suppressMarkers: true,  // Verstecke die Standard-Marker
+            suppressMarkers: true,
             polylineOptions: {
                 strokeColor: '#E3000F',
                 strokeOpacity: 0.8,
@@ -420,31 +322,28 @@
             }
         });
 
-        // Extrahiere Start- und Endnummer aus house_numbers
-        const [startNum, endNum] = '{{ route.house_numbers }}'.split('-').map(num => parseInt(num.trim()));
-        
-        // Erstelle Start- und Endadressen
-        const startAddress = `{{ route.street }} ${startNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
-        const endAddress = `{{ route.street }} ${endNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
+        var numbers = '{{ route.house_numbers }}'.split('-');
+        var startNum = parseInt(numbers[0].trim());
+        var endNum = parseInt(numbers[1].trim());
+        var startAddress = '{{ route.street }} ' + startNum + ', {{ route.zip_code }} {{ route.city }}, Germany';
+        var endAddress = '{{ route.street }} ' + endNum + ', {{ route.zip_code }} {{ route.city }}, Germany';
 
-        // Berechne die Route
         directionsService.route({
             origin: startAddress,
             destination: endAddress,
             travelMode: google.maps.TravelMode.WALKING
-        }, (response, status) => {
+        }, function(response, status) {
             if (status === 'OK') {
                 directionsRenderer.setDirections(response);
+                var path = response.routes[0].overview_path;
+                var coordinates = path.map(function(point) {
+                    return {
+                        lat: point.lat(),
+                        lng: point.lng()
+                    };
+                });
                 
-                // Speichere die Routenkoordinaten
-                const path = response.routes[0].overview_path;
-                const coordinates = path.map(point => ({
-                    lat: point.lat(),
-                    lng: point.lng()
-                }));
-                
-                // Optional: Speichere die Koordinaten in der Datenbank
-                fetch(`/api/routes/{{ route.id }}/path`, {
+                fetch('/api/routes/{{ route.id }}/path', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -454,6 +353,40 @@
             } else {
                 console.error('Directions request failed due to ' + status);
             }
+        });
+    }
+
+    function submitRegistration() {
+        var formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            date: document.getElementById('date').value,
+            time_slot: document.getElementById('timeSlot').value,
+            route_id: {{ route.id }}
+        };
+
+        fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
+                location.reload();
+            } else {
+                alert(data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
         });
     }
 </script>
