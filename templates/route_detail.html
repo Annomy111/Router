@@ -272,7 +272,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -470,53 +470,36 @@
             },
             body: JSON.stringify(formData)
         })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
+        .then(response => response.json())
+        .then(data => {
             if (data.success) {
-                var modalElement = document.getElementById('registrationModal');
-                var modal = bootstrap.Modal.getInstance(modalElement);
-                modal.hide();
-                // Entferne alle Modal-Backdrops
-                document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                    backdrop.remove();
-                });
-                // Entferne die modal-open Klasse vom Body
-                document.body.classList.remove('modal-open');
-                // Entferne inline styles vom Body
-                document.body.removeAttribute('style');
-                alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
-                location.reload();
+                bootstrap.Modal.getInstance(document.getElementById('registrationModal')).hide();
+                setTimeout(() => {
+                    alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
+                    location.reload();
+                }, 200);
             } else {
                 alert(data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
             }
         })
-        .catch(function(error) {
+        .catch(error => {
             console.error('Error:', error);
             alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
         });
     }
 
-    // Initialisiere das Modal und füge Event-Listener hinzu
     document.addEventListener('DOMContentLoaded', function() {
-        var modalElement = document.getElementById('registrationModal');
+        const modalElement = document.getElementById('registrationModal');
+        const bsModal = new bootstrap.Modal(modalElement);
         
-        // Event-Listener für das Schließen des Modals
-        modalElement.addEventListener('hidden.bs.modal', function () {
-            // Entferne alle Modal-Backdrops
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                backdrop.remove();
-            });
-            // Entferne die modal-open Klasse vom Body
+        modalElement.addEventListener('hidden.bs.modal', function() {
             document.body.classList.remove('modal-open');
-            // Entferne inline styles vom Body
-            document.body.removeAttribute('style');
-        });
-
-        var modal = new bootstrap.Modal(modalElement, {
-            backdrop: 'static',
-            keyboard: false
+            const backdrops = document.getElementsByClassName('modal-backdrop');
+            while(backdrops.length > 0) {
+                backdrops[0].remove();
+            }
+            document.body.style.paddingRight = '';
+            document.body.style.overflow = '';
         });
     });
 </script>
