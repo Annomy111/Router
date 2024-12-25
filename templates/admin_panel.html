@@ -236,7 +236,8 @@
                             </td>
                             <td>
                                 <button class="btn {% if route.is_active %}btn-danger{% else %}btn-success{% endif %}"
-                                        onclick="toggleRouteStatus({{ route.id }}, this)">
+                                        data-route-id="{{ route.id }}"
+                                        data-action="toggle-route">
                                     {% if route.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}
                                 </button>
                             </td>
@@ -278,10 +279,16 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-success" onclick="updateRegistrationStatus({{ reg.id }}, 'abgeschlossen')">
+                                    <button class="btn btn-sm btn-success" 
+                                            data-registration-id="{{ reg.id }}"
+                                            data-status="abgeschlossen"
+                                            data-action="update-registration">
                                         Abschließen
                                     </button>
-                                    <button class="btn btn-sm btn-danger" onclick="updateRegistrationStatus({{ reg.id }}, 'abgesagt')">
+                                    <button class="btn btn-sm btn-danger" 
+                                            data-registration-id="{{ reg.id }}"
+                                            data-status="abgesagt"
+                                            data-action="update-registration">
                                         Absagen
                                     </button>
                                 </div>
@@ -296,6 +303,25 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event-Listener für Route-Toggle-Buttons
+    document.querySelectorAll('[data-action="toggle-route"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const routeId = this.dataset.routeId;
+            toggleRouteStatus(routeId, this);
+        });
+    });
+
+    // Event-Listener für Registrierungs-Status-Buttons
+    document.querySelectorAll('[data-action="update-registration"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const regId = this.dataset.registrationId;
+            const status = this.dataset.status;
+            updateRegistrationStatus(regId, status);
+        });
+    });
+});
+
 function toggleRouteStatus(routeId, button) {
     fetch(`/api/routes/${routeId}/toggle`, {
         method: 'POST',
