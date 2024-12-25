@@ -477,11 +477,15 @@
             if (data.success) {
                 var modalElement = document.getElementById('registrationModal');
                 var modal = bootstrap.Modal.getInstance(modalElement);
-                if (!modal) {
-                    modal = new bootstrap.Modal(modalElement);
-                }
                 modal.hide();
-                document.querySelector('.modal-backdrop').remove();
+                // Entferne alle Modal-Backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                    backdrop.remove();
+                });
+                // Entferne die modal-open Klasse vom Body
+                document.body.classList.remove('modal-open');
+                // Entferne inline styles vom Body
+                document.body.removeAttribute('style');
                 alert('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
                 location.reload();
             } else {
@@ -494,9 +498,22 @@
         });
     }
 
-    // Initialisiere das Modal
+    // Initialisiere das Modal und füge Event-Listener hinzu
     document.addEventListener('DOMContentLoaded', function() {
         var modalElement = document.getElementById('registrationModal');
+        
+        // Event-Listener für das Schließen des Modals
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            // Entferne alle Modal-Backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            // Entferne die modal-open Klasse vom Body
+            document.body.classList.remove('modal-open');
+            // Entferne inline styles vom Body
+            document.body.removeAttribute('style');
+        });
+
         var modal = new bootstrap.Modal(modalElement, {
             backdrop: 'static',
             keyboard: false
