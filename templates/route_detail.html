@@ -432,10 +432,7 @@
     // Komponenten initialisieren
     function initializeComponents() {
         // Modal initialisieren
-        registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
+        registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'));
 
         // Toast initialisieren
         notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'), {

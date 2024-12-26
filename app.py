@@ -48,20 +48,32 @@ with app.app_context():
     
     # Versuche das Backup wiederherzustellen
     try:
-        from backup_db import restore_database
+        print("Versuche Backup wiederherzustellen...")
         restore_database()
         print("Backup erfolgreich wiederhergestellt")
+        
+        # Stelle sicher, dass alle existierenden Routen aktiv sind
+        routes = Route.query.all()
+        for route in routes:
+            if not route.is_active:
+                route.is_active = True
+        db.session.commit()
+        print(f"{len(routes)} Routen wurden aktiviert")
+        
     except Exception as e:
         print(f"Fehler beim Wiederherstellen des Backups: {str(e)}")
+        print("Fahre mit leerer Datenbank fort...")
 
 # Backup bei Serverbeendigung erstellen
 @atexit.register
 def create_backup():
-    try:
-        backup_database()
-        print("Backup erfolgreich erstellt")
-    except Exception as e:
-        print(f"Fehler beim Erstellen des Backups: {str(e)}")
+    with app.app_context():
+        try:
+            print("Erstelle Backup...")
+            backup_database()
+            print("Backup erfolgreich erstellt")
+        except Exception as e:
+            print(f"Fehler beim Erstellen des Backups: {str(e)}")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
