@@ -1,11 +1,32 @@
-from app import app, db
+from flask import current_app
+from models import db, Route
+from sqlalchemy import text
 
 def upgrade():
-    with app.app_context():
+    with current_app.app_context():
         with db.engine.connect() as conn:
-            conn.execute(db.text("ALTER TABLE route ADD COLUMN max_volunteers INTEGER DEFAULT 2"))
+            conn.execute(text('''
+                ALTER TABLE route 
+                ADD COLUMN IF NOT EXISTS max_volunteers INTEGER DEFAULT 2
+            '''))
             conn.commit()
-            print("Migration erfolgreich: max_volunteers Spalte wurde hinzugefügt")
+        
+        # Setze Standardwerte für bestehende Routen
+        routes = Route.query.all()
+        for route in routes:
+            if route.max_volunteers is None:
+                route.max_volunteers = 2
+        
+        db.session.commit()
+
+def downgrade():
+    with current_app.app_context():
+        with db.engine.connect() as conn:
+            conn.execute(text('''
+                ALTER TABLE route 
+                DROP COLUMN IF EXISTS max_volunteers
+            '''))
+            conn.commit()
 
 if __name__ == '__main__':
     try:

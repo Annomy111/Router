@@ -1,15 +1,18 @@
 from flask import current_app
 from models import db, Route
+from sqlalchemy import text
 
 def upgrade():
     # Füge neue Spalten hinzu
     with current_app.app_context():
-        db.engine.execute('''
-            ALTER TABLE route 
-            ADD COLUMN meeting_point VARCHAR(500),
-            ADD COLUMN meeting_point_lat FLOAT,
-            ADD COLUMN meeting_point_lon FLOAT
-        ''')
+        with db.engine.connect() as conn:
+            conn.execute(text('''
+                ALTER TABLE route 
+                ADD COLUMN IF NOT EXISTS meeting_point VARCHAR(500),
+                ADD COLUMN IF NOT EXISTS meeting_point_lat FLOAT,
+                ADD COLUMN IF NOT EXISTS meeting_point_lon FLOAT
+            '''))
+            conn.commit()
         
         # Aktualisiere bestehende Routen mit Treffpunkten
         routes = Route.query.all()
@@ -25,9 +28,11 @@ def upgrade():
 def downgrade():
     # Entferne die Spalten wieder
     with current_app.app_context():
-        db.engine.execute('''
-            ALTER TABLE route 
-            DROP COLUMN meeting_point,
-            DROP COLUMN meeting_point_lat,
-            DROP COLUMN meeting_point_lon
-        ''') 
+        with db.engine.connect() as conn:
+            conn.execute(text('''
+                ALTER TABLE route 
+                DROP COLUMN IF EXISTS meeting_point,
+                DROP COLUMN IF EXISTS meeting_point_lat,
+                DROP COLUMN IF EXISTS meeting_point_lon
+            '''))
+            conn.commit() 
