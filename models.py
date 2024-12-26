@@ -38,6 +38,7 @@ class Route(db.Model):
     max_volunteers = db.Column(db.Integer, default=4)
     is_active = db.Column(db.Boolean, default=True)
     path_coordinates = db.Column(db.JSON, nullable=True)
+    needs_review = db.Column(db.Boolean, default=False)
 
     def get_registration_stats(self):
         """Berechnet Statistiken für die Routenregistrierungen"""
