@@ -45,15 +45,23 @@ def load_user(user_id):
 # Erstelle die Datenbank und Tabellen
 with app.app_context():
     db.create_all()
-
-# Backup bei Serverstart wiederherstellen
-try:
-    restore_database()
-except Exception as e:
-    print(f"Fehler beim Wiederherstellen des Backups: {e}")
+    
+    # Versuche das Backup wiederherzustellen
+    try:
+        from backup_db import restore_database
+        restore_database()
+        print("Backup erfolgreich wiederhergestellt")
+    except Exception as e:
+        print(f"Fehler beim Wiederherstellen des Backups: {str(e)}")
 
 # Backup bei Serverbeendigung erstellen
-atexit.register(backup_database)
+@atexit.register
+def create_backup():
+    try:
+        backup_database()
+        print("Backup erfolgreich erstellt")
+    except Exception as e:
+        print(f"Fehler beim Erstellen des Backups: {str(e)}")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
