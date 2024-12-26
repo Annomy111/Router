@@ -245,8 +245,150 @@ Status: {registration.status}
         )
         mail.send(msg)
         print(f"Benachrichtigungs-E-Mail wurde an {app.config['ADMIN_EMAIL']} gesendet")
+        
+        # Sende auch eine Bestätigungs-E-Mail an den Freiwilligen
+        send_volunteer_confirmation(volunteer, route, registration)
+        
     except Exception as e:
         print(f"Fehler beim Senden der E-Mail: {str(e)}")
+
+def send_volunteer_confirmation(volunteer, route, registration):
+    """Sendet eine Bestätigungs-E-Mail an den Freiwilligen"""
+    try:
+        subject = "Bestätigung Ihrer Anmeldung für den Haustürwahlkampf"
+        
+        # HTML-Version der E-Mail
+        html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        .header {{
+            background-color: #DC3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }}
+        .content {{
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }}
+        .info-box {{
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #DC3545;
+        }}
+        .footer {{
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Vielen Dank für Ihre Anmeldung!</h1>
+        </div>
+        <div class="content">
+            <p>Hallo {volunteer.name},</p>
+            
+            <p>vielen Dank für Ihre Anmeldung zum Haustürwahlkampf. Wir freuen uns sehr über Ihr Engagement!</p>
+            
+            <div class="info-box">
+                <h3>Ihre Routendetails:</h3>
+                <p><strong>Stadt:</strong> {route.city}<br>
+                <strong>Straße:</strong> {route.street}<br>
+                <strong>Hausnummern:</strong> {route.house_numbers}<br>
+                <strong>Datum:</strong> {registration.date.strftime('%d.%m.%Y')}<br>
+                <strong>Zeitfenster:</strong> {registration.time_slot}</p>
+            </div>
+            
+            <div class="info-box">
+                <h3>Wichtige Informationen:</h3>
+                <ul>
+                    <li>Bitte seien Sie 5-10 Minuten vor Beginn am Treffpunkt</li>
+                    <li>Treffpunkt: {route.meeting_point}</li>
+                    <li>Sie erhalten vor Ort alle notwendigen Materialien</li>
+                    <li>Bitte bringen Sie einen Stift und ggf. eine Wasserflasche mit</li>
+                    <li>Bei schlechtem Wetter: Denken Sie an einen Regenschirm</li>
+                </ul>
+            </div>
+            
+            <p>Falls Sie Fragen haben oder den Termin nicht wahrnehmen können, melden Sie sich bitte unter {app.config['ADMIN_EMAIL']}.</p>
+            
+            <p>Wir freuen uns auf Sie!</p>
+            
+            <p>Mit besten Grüßen<br>
+            Ihr Team Dieren</p>
+        </div>
+        <div class="footer">
+            <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht direkt auf diese E-Mail.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        
+        # Text-Version der E-Mail für E-Mail-Clients, die kein HTML unterstützen
+        text_body = f"""
+Vielen Dank für Ihre Anmeldung zum Haustürwahlkampf!
+
+Hallo {volunteer.name},
+
+vielen Dank für Ihre Anmeldung zum Haustürwahlkampf. Wir freuen uns sehr über Ihr Engagement!
+
+Ihre Routendetails:
+- Stadt: {route.city}
+- Straße: {route.street}
+- Hausnummern: {route.house_numbers}
+- Datum: {registration.date.strftime('%d.%m.%Y')}
+- Zeitfenster: {registration.time_slot}
+- Treffpunkt: {route.meeting_point}
+
+Wichtige Informationen:
+- Bitte seien Sie 5-10 Minuten vor Beginn am Treffpunkt
+- Sie erhalten vor Ort alle notwendigen Materialien
+- Bitte bringen Sie einen Stift und ggf. eine Wasserflasche mit
+- Bei schlechtem Wetter: Denken Sie an einen Regenschirm
+
+Falls Sie Fragen haben oder den Termin nicht wahrnehmen können, melden Sie sich bitte unter {app.config['ADMIN_EMAIL']}.
+
+Wir freuen uns auf Sie!
+
+Mit besten Grüßen
+Ihr Team Dieren
+
+---
+Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht direkt auf diese E-Mail.
+"""
+        
+        msg = Message(
+            subject=subject,
+            recipients=[volunteer.email],
+            body=text_body,
+            html=html_body
+        )
+        mail.send(msg)
+        print(f"Bestätigungs-E-Mail wurde an {volunteer.email} gesendet")
+        
+    except Exception as e:
+        print(f"Fehler beim Senden der Bestätigungs-E-Mail: {str(e)}")
 
 @app.route('/')
 def index():
