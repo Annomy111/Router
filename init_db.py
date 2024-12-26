@@ -83,6 +83,196 @@ def init_db():
         
         print("Datenbankinitialisierung abgeschlossen")
 
+def add_routes():
+    routes = [
+        # Bestehende Routen bleiben erhalten
+        # ... existing routes ...
+
+        # Neue Routen um Südwall 38, Krefeld
+        {
+            'street': 'Südwall',
+            'house_numbers': '36-40',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3324,
+            'lon': 6.5643,
+            'mobilization_index': 2.8,
+            'conviction_index': 2.5,
+            'households': 25,
+            'rental_percentage': 75.5,
+            'meeting_point': 'Vor dem Café am Südwall 38',
+            'meeting_point_lat': 51.3324,
+            'meeting_point_lon': 6.5643,
+            'is_active': False,  # Nicht aktiv bis zum Review
+            'needs_review': True
+        },
+        {
+            'street': 'Friedrichstraße',
+            'house_numbers': '1-15',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3326,
+            'lon': 6.5648,
+            'mobilization_index': 2.6,
+            'conviction_index': 2.7,
+            'households': 30,
+            'rental_percentage': 68.3,
+            'meeting_point': 'Ecke Friedrichstraße/Südwall',
+            'meeting_point_lat': 51.3326,
+            'meeting_point_lon': 6.5648,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Petersstraße',
+            'house_numbers': '2-20',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3322,
+            'lon': 6.5638,
+            'mobilization_index': 2.4,
+            'conviction_index': 2.6,
+            'households': 28,
+            'rental_percentage': 72.1,
+            'meeting_point': 'Vor der Peterskirche',
+            'meeting_point_lat': 51.3322,
+            'meeting_point_lon': 6.5638,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Neue Linner Straße',
+            'house_numbers': '1-19',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3328,
+            'lon': 6.5650,
+            'mobilization_index': 2.9,
+            'conviction_index': 2.8,
+            'households': 35,
+            'rental_percentage': 70.8,
+            'meeting_point': 'Ecke Neue Linner Straße/Südwall',
+            'meeting_point_lat': 51.3328,
+            'meeting_point_lon': 6.5650,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Stephanstraße',
+            'house_numbers': '1-17',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3320,
+            'lon': 6.5635,
+            'mobilization_index': 2.5,
+            'conviction_index': 2.4,
+            'households': 22,
+            'rental_percentage': 65.4,
+            'meeting_point': 'Vor dem Stadthaus',
+            'meeting_point_lat': 51.3320,
+            'meeting_point_lon': 6.5635,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Königstraße',
+            'house_numbers': '2-22',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3330,
+            'lon': 6.5645,
+            'mobilization_index': 3.0,
+            'conviction_index': 2.9,
+            'households': 40,
+            'rental_percentage': 73.2,
+            'meeting_point': 'Vor dem Königshof',
+            'meeting_point_lat': 51.3330,
+            'meeting_point_lon': 6.5645,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Dreikönigenstraße',
+            'house_numbers': '1-21',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3325,
+            'lon': 6.5640,
+            'mobilization_index': 2.7,
+            'conviction_index': 2.6,
+            'households': 32,
+            'rental_percentage': 69.7,
+            'meeting_point': 'Ecke Dreikönigenstraße/Südwall',
+            'meeting_point_lat': 51.3325,
+            'meeting_point_lon': 6.5640,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Rheinstraße',
+            'house_numbers': '2-24',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3327,
+            'lon': 6.5647,
+            'mobilization_index': 2.8,
+            'conviction_index': 2.7,
+            'households': 38,
+            'rental_percentage': 71.5,
+            'meeting_point': 'Vor dem Stadttheater',
+            'meeting_point_lat': 51.3327,
+            'meeting_point_lon': 6.5647,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'Marktstraße',
+            'house_numbers': '1-19',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3323,
+            'lon': 6.5642,
+            'mobilization_index': 2.6,
+            'conviction_index': 2.5,
+            'households': 28,
+            'rental_percentage': 67.8,
+            'meeting_point': 'Am alten Markt',
+            'meeting_point_lat': 51.3323,
+            'meeting_point_lon': 6.5642,
+            'is_active': False,
+            'needs_review': True
+        },
+        {
+            'street': 'St.-Anton-Straße',
+            'house_numbers': '2-18',
+            'zip_code': '47798',
+            'city': 'Krefeld',
+            'lat': 51.3321,
+            'lon': 6.5637,
+            'mobilization_index': 2.5,
+            'conviction_index': 2.4,
+            'households': 25,
+            'rental_percentage': 66.9,
+            'meeting_point': 'Vor der St. Anton Kirche',
+            'meeting_point_lat': 51.3321,
+            'meeting_point_lon': 6.5637,
+            'is_active': False,
+            'needs_review': True
+        }
+    ]
+
+    for route_data in routes:
+        route = Route.query.filter_by(
+            street=route_data['street'],
+            house_numbers=route_data['house_numbers']
+        ).first()
+        
+        if not route:
+            route = Route(**route_data)
+            db.session.add(route)
+    
+    db.session.commit()
+
 if __name__ == '__main__':
     init_db()
 
