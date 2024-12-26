@@ -2,144 +2,154 @@ import sqlite3
 import json
 from datetime import datetime
 import os
+import glob
 
 def backup_database():
-    """Sichert die wichtigen Daten aus der Datenbank"""
+    """Erstellt ein Backup der Datenbank"""
     try:
+        # Verbindung zur Datenbank herstellen
         conn = sqlite3.connect('instance/neue_daten.db')
         cursor = conn.cursor()
         
-        # Backup-Verzeichnis erstellen, falls es nicht existiert
+        # Hole alle Routen
+        cursor.execute("""
+            SELECT id, street, house_numbers, zip_code, city, lat, lon, 
+                   mobilization_index, conviction_index, households, rental_percentage,
+                   meeting_point, meeting_point_lat, meeting_point_lon, is_active, needs_review
+            FROM route
+        """)
+        routes = cursor.fetchall()
+        
+        # Hole alle Freiwilligen
+        cursor.execute("""
+            SELECT id, name, email, phone
+            FROM volunteer
+        """)
+        volunteers = cursor.fetchall()
+        
+        # Hole alle Registrierungen
+        cursor.execute("""
+            SELECT id, volunteer_id, route_id, date, time_slot, status
+            FROM route_registration
+        """)
+        registrations = cursor.fetchall()
+        
+        # Erstelle Backup-Verzeichnis, falls es nicht existiert
         if not os.path.exists('backups'):
             os.makedirs('backups')
         
+        # Erstelle Backup-Datei
         backup_data = {
-            'route_registrations': [],
-            'volunteers': [],
-            'timestamp': datetime.now().isoformat()
+            'routes': [{
+                'id': r[0],
+                'street': r[1],
+                'house_numbers': r[2],
+                'zip_code': r[3],
+                'city': r[4],
+                'lat': r[5],
+                'lon': r[6],
+                'mobilization_index': r[7],
+                'conviction_index': r[8],
+                'households': r[9],
+                'rental_percentage': r[10],
+                'meeting_point': r[11],
+                'meeting_point_lat': r[12],
+                'meeting_point_lon': r[13],
+                'is_active': bool(r[14]),
+                'needs_review': bool(r[15])
+            } for r in routes],
+            'volunteers': [{
+                'id': v[0],
+                'name': v[1],
+                'email': v[2],
+                'phone': v[3]
+            } for v in volunteers],
+            'registrations': [{
+                'id': reg[0],
+                'volunteer_id': reg[1],
+                'route_id': reg[2],
+                'date': reg[3],
+                'time_slot': reg[4],
+                'status': reg[5]
+            } for reg in registrations]
         }
         
-        # Registrierungen sichern
-        try:
-            cursor.execute("""
-                SELECT id, route_id, volunteer_id, date, time_slot, status, created_at 
-                FROM route_registration
-            """)
-            registrations = cursor.fetchall()
-            for reg in registrations:
-                backup_data['route_registrations'].append({
-                    'id': reg[0],
-                    'route_id': reg[1],
-                    'volunteer_id': reg[2],
-                    'date': reg[3],
-                    'time_slot': reg[4],
-                    'status': reg[5],
-                    'created_at': reg[6]
-                })
-        except sqlite3.OperationalError:
-            print("Warnung: Tabelle route_registration existiert noch nicht")
-        
-        # Freiwillige sichern
-        try:
-            cursor.execute("""
-                SELECT id, name, email, phone 
-                FROM volunteer
-            """)
-            volunteers = cursor.fetchall()
-            for vol in volunteers:
-                backup_data['volunteers'].append({
-                    'id': vol[0],
-                    'name': vol[1],
-                    'email': vol[2],
-                    'phone': vol[3]
-                })
-        except sqlite3.OperationalError:
-            print("Warnung: Tabelle volunteer existiert noch nicht")
-        
-        # Backup in Datei speichern
-        backup_file = f"backups/db_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        # Speichere Backup
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = f'backups/db_backup_{timestamp}.json'
         with open(backup_file, 'w') as f:
-            json.dump(backup_data, f, indent=2)
+            json.dump(backup_data, f, indent=4)
         
-        conn.close()
+        print(f"Backup wurde erstellt: {backup_file}")
         return backup_file
+        
     except Exception as e:
-        print(f"Fehler beim Backup der Datenbank: {str(e)}")
+        print(f"Fehler beim Erstellen des Backups: {str(e)}")
         return None
 
-def restore_database(backup_file=None):
-    """Stellt die Daten aus dem letzten Backup wieder her"""
-    if backup_file is None:
-        # Finde das neueste Backup
-        if not os.path.exists('backups'):
-            print("Kein Backup-Verzeichnis gefunden.")
-            return
-        backup_files = [f for f in os.listdir('backups') if f.startswith('db_backup_')]
-        if not backup_files:
-            print("Kein Backup gefunden.")
-            return
-        backup_file = f"backups/{sorted(backup_files)[-1]}"
-    
+def restore_database():
+    """Stellt die Datenbank aus dem neuesten Backup wieder her"""
     try:
-        # Lade das Backup
-        with open(backup_file, 'r') as f:
+        # Finde das neueste Backup
+        backup_files = glob.glob('backups/db_backup_*.json')
+        if not backup_files:
+            print("Keine Backup-Dateien gefunden")
+            return
+        
+        latest_backup = max(backup_files)
+        
+        # Lade Backup-Daten
+        with open(latest_backup, 'r') as f:
             backup_data = json.load(f)
         
+        # Verbindung zur Datenbank herstellen
         conn = sqlite3.connect('instance/neue_daten.db')
         cursor = conn.cursor()
         
-        # Stelle sicher, dass die Tabellen existieren
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS volunteer (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(120) NOT NULL UNIQUE,
-                phone VARCHAR(20)
-            )
-        """)
+        # Stelle Routen wieder her
+        for route in backup_data['routes']:
+            cursor.execute("""
+                INSERT OR REPLACE INTO route 
+                (id, street, house_numbers, zip_code, city, lat, lon,
+                 mobilization_index, conviction_index, households, rental_percentage,
+                 meeting_point, meeting_point_lat, meeting_point_lon, is_active, needs_review)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                route['id'], route['street'], route['house_numbers'], route['zip_code'],
+                route['city'], route['lat'], route['lon'], route['mobilization_index'],
+                route['conviction_index'], route['households'], route['rental_percentage'],
+                route['meeting_point'], route['meeting_point_lat'], route['meeting_point_lon'],
+                route['is_active'], route['needs_review']
+            ))
         
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS route_registration (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                route_id INTEGER NOT NULL,
-                volunteer_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                time_slot VARCHAR(50) NOT NULL,
-                status VARCHAR(20) DEFAULT 'geplant',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (route_id) REFERENCES route (id),
-                FOREIGN KEY (volunteer_id) REFERENCES volunteer (id)
-            )
-        """)
+        # Stelle Freiwillige wieder her
+        for volunteer in backup_data['volunteers']:
+            cursor.execute("""
+                INSERT OR REPLACE INTO volunteer 
+                (id, name, email, phone)
+                VALUES (?, ?, ?, ?)
+            """, (
+                volunteer['id'], volunteer['name'], volunteer['email'], volunteer['phone']
+            ))
         
-        # Stelle die Freiwilligen wieder her
-        for vol in backup_data.get('volunteers', []):
-            try:
-                cursor.execute("""
-                    INSERT OR REPLACE INTO volunteer 
-                    (id, name, email, phone)
-                    VALUES (?, ?, ?, ?)
-                """, (vol['id'], vol['name'], vol['email'], vol['phone']))
-            except sqlite3.Error as e:
-                print(f"Fehler beim Wiederherstellen des Freiwilligen {vol['name']}: {e}")
-        
-        # Stelle die Registrierungen wieder her
-        for reg in backup_data.get('route_registrations', []):
-            try:
-                cursor.execute("""
-                    INSERT OR REPLACE INTO route_registration 
-                    (id, route_id, volunteer_id, date, time_slot, status, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (reg['id'], reg['route_id'], reg['volunteer_id'], reg['date'], 
-                     reg['time_slot'], reg['status'], reg['created_at']))
-            except sqlite3.Error as e:
-                print(f"Fehler beim Wiederherstellen der Registrierung {reg['id']}: {e}")
+        # Stelle Registrierungen wieder her
+        for reg in backup_data['registrations']:
+            cursor.execute("""
+                INSERT OR REPLACE INTO route_registration 
+                (id, volunteer_id, route_id, date, time_slot, status)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                reg['id'], reg['volunteer_id'], reg['route_id'],
+                reg['date'], reg['time_slot'], reg['status']
+            ))
         
         conn.commit()
-        conn.close()
-        print(f"Datenbank erfolgreich wiederhergestellt aus {backup_file}")
+        print(f"Datenbank erfolgreich wiederhergestellt aus {latest_backup}")
+        
     except Exception as e:
         print(f"Fehler beim Wiederherstellen der Datenbank: {str(e)}")
+        if 'conn' in locals():
+            conn.rollback()
 
 if __name__ == '__main__':
     import sys
