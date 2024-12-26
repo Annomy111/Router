@@ -180,6 +180,23 @@
         background: var(--spd-white);
         border-left: 4px solid var(--spd-red);
     }
+
+    /* Modal Styles */
+    .modal-backdrop {
+        display: none !important;
+    }
+
+    .modal {
+        background: none !important;
+    }
+
+    .modal-dialog {
+        margin: 1.75rem auto;
+    }
+
+    .modal-content {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
 </style>
 {% endblock %}
 
@@ -345,7 +362,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+<div class="modal" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -431,8 +448,23 @@
 
     // Komponenten initialisieren
     function initializeComponents() {
-        // Modal initialisieren
-        registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'));
+        // Modal ohne statische Optionen initialisieren
+        const modalElement = document.getElementById('registrationModal');
+        registrationModal = new bootstrap.Modal(modalElement, {
+            backdrop: false,
+            keyboard: true
+        });
+
+        // Event-Listener für Modal-Schließen
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
 
         // Toast initialisieren
         notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'), {
@@ -537,7 +569,20 @@
             const data = await response.json();
 
             if (data.success) {
-                registrationModal.hide();
+                // Modal manuell schließen
+                const modalElement = document.getElementById('registrationModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
+                
+                // Backdrop und Klassen entfernen
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                
                 showNotification('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
                 setTimeout(() => window.location.reload(), FORM_SUBMISSION_DELAY);
             } else {
