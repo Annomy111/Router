@@ -112,6 +112,7 @@
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 2rem;
+        pointer-events: auto;
     }
     
     .map-fullscreen {
@@ -120,7 +121,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 100;
+        z-index: 1030;
         border-radius: 0;
     }
     
@@ -214,9 +215,11 @@
         top: 20px;
         right: 20px;
         z-index: 1060;
+        pointer-events: none;
     }
 
     .toast {
+        pointer-events: auto;
         background: var(--spd-white);
         border-left: 4px solid var(--spd-red);
     }
@@ -224,16 +227,21 @@
     /* Modal Styles */
     .modal-backdrop {
         background-color: rgba(0, 0, 0, 0.5) !important;
-        z-index: 95;
+        z-index: 1040;
     }
 
     .modal {
-        display: flex !important;
+        z-index: 1050;
+    }
+
+    .modal.fade {
+        display: none;
+    }
+
+    .modal.show {
+        display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0 !important;
-        margin: 0 !important;
-        z-index: 96;
     }
 
     .modal-dialog {
@@ -831,6 +839,22 @@
             max-width: calc(100% - 1rem);
         }
     }
+
+    /* Ensure content is clickable */
+    .container {
+        position: relative;
+        z-index: 1;
+    }
+
+    .card {
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn {
+        position: relative;
+        z-index: 2;
+    }
 </style>
 {% endblock %}
 
@@ -1225,6 +1249,19 @@
 
     // Event Listener für DOM-Laden
     document.addEventListener('DOMContentLoaded', function() {
+        // Stelle sicher, dass das Modal geschlossen ist
+        const modalElement = document.getElementById('registrationModal');
+        if (modalElement) {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+
+        // Initialisiere Komponenten
         initializeComponents();
         setupEventListeners();
         initializeWizard();
@@ -1234,13 +1271,22 @@
     function initializeComponents() {
         // Modal initialisieren
         const modalElement = document.getElementById('registrationModal');
-        registrationModal = new bootstrap.Modal(modalElement);
+        if (modalElement) {
+            registrationModal = new bootstrap.Modal(modalElement, {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            });
+        }
 
         // Toast initialisieren
-        notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'), {
-            autohide: true,
-            delay: TOAST_DURATION
-        });
+        const toastElement = document.getElementById('notificationToast');
+        if (toastElement) {
+            notificationToast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: TOAST_DURATION
+            });
+        }
     }
 
     // Event Listener einrichten
@@ -1268,12 +1314,19 @@
             prevBtn.addEventListener('click', previousStep);
         }
 
-        // Touch Events für Karte
-        const mapContainer = document.querySelector('.map-container');
-        if (mapContainer) {
-            mapContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-            mapContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
-            mapContainer.addEventListener('wheel', handleWheel, { passive: true });
+        // Map Controls
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => {
+                const mapContainer = document.getElementById('mapContainer');
+                if (mapContainer) {
+                    mapContainer.classList.toggle('map-fullscreen');
+                    const icon = fullscreenBtn.querySelector('i');
+                    icon.classList.toggle('fa-expand');
+                    icon.classList.toggle('fa-compress');
+                    google.maps.event.trigger(map, 'resize');
+                }
+            });
         }
     }
 
