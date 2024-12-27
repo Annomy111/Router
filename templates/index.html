@@ -259,6 +259,30 @@
             margin: 0;
         }
     }
+
+    .pulse-button {
+        animation: pulse 2s infinite;
+        box-shadow: 0 0 0 rgba(227, 0, 15, 0.4);
+    }
+    
+    .pulse-button:hover {
+        animation: none;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(227, 0, 15, 0.3);
+        background-color: #cc0000 !important;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(227, 0, 15, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(227, 0, 15, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(227, 0, 15, 0);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -277,8 +301,8 @@
             <a href="#routes" class="btn btn-outline-light btn-lg">
                 <i class="fas fa-map-marked-alt"></i> Routen erkunden
             </a>
-            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
-                <i class="fas fa-user-plus"></i> Jetzt mitmachen
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg shadow-lg pulse-button" style="background-color: #E3000F; border: none; padding: 15px 30px; font-weight: 600; transition: all 0.3s ease;">
+                <i class="fas fa-user-plus me-2"></i> Jetzt mitmachen!
             </a>
         </div>
     </div>
