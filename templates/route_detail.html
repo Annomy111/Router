@@ -223,14 +223,13 @@
 
     /* Modal Styles */
     .modal-backdrop {
-        display: none !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
     }
 
     .modal {
         display: flex !important;
         align-items: center;
         justify-content: center;
-        background-color: rgba(0, 0, 0, 0.5) !important;
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -240,7 +239,6 @@
         width: auto;
         max-width: 500px;
         margin: 1.75rem auto !important;
-        pointer-events: none;
     }
 
     .modal-content {
@@ -1008,7 +1006,10 @@
                 <div class="card-body">
                     <h5 class="card-title">Aktionen</h5>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrationModal">
+                        <button type="button" class="btn btn-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#registrationModal"
+                                data-route-id="{{ route.id }}">
                             Route reservieren
                         </button>
                         <button class="btn btn-outline-secondary" onclick="window.history.back()">
@@ -1036,12 +1037,16 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+<div class="modal fade" id="registrationModal" 
+     tabindex="-1" 
+     aria-labelledby="registrationModalLabel" 
+     aria-hidden="true"
+     data-route-id="{{ route.id }}">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="registrationModalLabel">Route reservieren</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                <h5 class="modal-title">Route reservieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="registrationForm" class="form-wizard">
@@ -1357,8 +1362,7 @@
     async function handleRegistration(event) {
         event.preventDefault();
         
-        const form = event.target;
-        if (!validateForm(form)) {
+        if (!validateForm(event.target)) {
             return;
         }
 
