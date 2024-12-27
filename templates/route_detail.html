@@ -12,7 +12,7 @@
     // Lazy Load Google Maps
     function loadGoogleMaps() {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places,directions&callback=initMap`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places&callback=initMap`;
         script.async = true;
         script.defer = true;
         document.head.appendChild(script);
@@ -120,7 +120,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 1050;
+        z-index: 100;
         border-radius: 0;
     }
     
@@ -128,7 +128,7 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        z-index: 1000;
+        z-index: 50;
     }
     
     .map-control-btn {
@@ -224,6 +224,7 @@
     /* Modal Styles */
     .modal-backdrop {
         background-color: rgba(0, 0, 0, 0.5) !important;
+        z-index: 95;
     }
 
     .modal {
@@ -232,6 +233,7 @@
         justify-content: center;
         padding: 0 !important;
         margin: 0 !important;
+        z-index: 96;
     }
 
     .modal-dialog {
@@ -649,7 +651,7 @@
         background: white;
         padding: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        z-index: 1030;
+        z-index: 90;
         display: none;
     }
 
@@ -661,7 +663,7 @@
         background: white;
         padding: 0.5rem;
         box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-        z-index: 1030;
+        z-index: 90;
         display: none;
     }
 
@@ -748,16 +750,7 @@
 
     /* Mini-Karte */
     .mini-map {
-        position: fixed;
-        bottom: 70px;
-        right: 1rem;
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        display: none;
-        z-index: 1020;
+        display: none !important;
     }
 
     .mini-map-close {
@@ -1235,7 +1228,7 @@
         initializeComponents();
         setupEventListeners();
         initializeWizard();
-    });
+    }, { passive: true });
 
     // Komponenten initialisieren
     function initializeComponents() {
@@ -1261,7 +1254,7 @@
         // Input Validation
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(input => {
-            input.addEventListener('input', () => validateInput(input));
+            input.addEventListener('input', () => validateInput(input), { passive: true });
         });
 
         // Wizard Navigation
@@ -1273,6 +1266,14 @@
         const prevBtn = document.getElementById('prevBtn');
         if (prevBtn) {
             prevBtn.addEventListener('click', previousStep);
+        }
+
+        // Touch Events für Karte
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            mapContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+            mapContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+            mapContainer.addEventListener('wheel', handleWheel, { passive: true });
         }
     }
 
@@ -1680,6 +1681,19 @@
         }
         lastScrollTop = st <= 0 ? 0 : st;
     });
+
+    // Touch Event Handler
+    function handleTouchStart(e) {
+        // Touch-Handling ohne preventDefault
+    }
+
+    function handleTouchMove(e) {
+        // Touch-Handling ohne preventDefault
+    }
+
+    function handleWheel(e) {
+        // Wheel-Handling ohne preventDefault
+    }
 
     // Touch Events für Karte
     let touchStartX = 0;
