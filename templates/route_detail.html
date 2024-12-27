@@ -226,24 +226,12 @@
 
     /* Modal Styles */
     .modal-backdrop {
-        display: none;
-    }
-
-    .modal-backdrop.show {
-        display: block;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
+        display: none !important;
     }
 
     .modal {
-        display: none;
+        background-color: rgba(0, 0, 0, 0.5);
         z-index: 1050;
-    }
-
-    .modal.show {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
     }
 
     .modal-dialog {
@@ -251,6 +239,7 @@
         width: auto;
         max-width: 500px;
         margin: 1.75rem auto !important;
+        z-index: 1051;
     }
 
     .modal-content {
@@ -264,6 +253,7 @@
         border-radius: 12px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         outline: 0;
+        z-index: 1052;
     }
 
     .modal-header {
@@ -879,6 +869,16 @@
     body.modal-open {
         overflow: auto !important;
         padding-right: 0 !important;
+    }
+
+    /* Ensure buttons are clickable */
+    .btn {
+        position: relative;
+        z-index: 2;
+    }
+
+    .btn-close {
+        z-index: 1053;
     }
 </style>
 {% endblock %}
