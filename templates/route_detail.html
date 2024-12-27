@@ -1071,23 +1071,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         initializeComponents();
         setupEventListeners();
+        initializeWizard();
     });
 
     // Komponenten initialisieren
     function initializeComponents() {
-        // Modal ohne Backdrop initialisieren
+        // Modal initialisieren
         const modalElement = document.getElementById('registrationModal');
-        registrationModal = new bootstrap.Modal(modalElement, {
-            backdrop: false,
-            keyboard: true
-        });
-
-        // Event-Listener für Modal-Schließen
-        modalElement.addEventListener('hidden.bs.modal', function () {
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+        registrationModal = new bootstrap.Modal(modalElement);
 
         // Toast initialisieren
         notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'), {
@@ -1100,15 +1091,97 @@
     function setupEventListeners() {
         // Form-Handler
         const form = document.getElementById('registrationForm');
-        form.addEventListener('submit', handleRegistration);
+        if (form) {
+            form.addEventListener('submit', handleRegistration);
+        }
 
-        // Modal Events
-        document.getElementById('registrationModal').addEventListener('hidden.bs.modal', handleModalHidden);
-        
         // Input Validation
-        form.querySelectorAll('input, select').forEach(input => {
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
             input.addEventListener('input', () => validateInput(input));
         });
+
+        // Wizard Navigation
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', nextStep);
+        }
+
+        const prevBtn = document.getElementById('prevBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', previousStep);
+        }
+    }
+
+    // Wizard initialisieren
+    function initializeWizard() {
+        const steps = document.querySelectorAll('.wizard-step');
+        if (steps.length > 0) {
+            steps.forEach((step, index) => {
+                if (index === 0) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        }
+    }
+
+    // Nächster Schritt
+    function nextStep() {
+        const currentStep = document.querySelector('.wizard-step.active');
+        if (currentStep && validateStep(currentStep)) {
+            const nextStep = currentStep.nextElementSibling;
+            if (nextStep && nextStep.classList.contains('wizard-step')) {
+                currentStep.classList.remove('active');
+                nextStep.classList.add('active');
+                updateProgressBar();
+            }
+        }
+    }
+
+    // Vorheriger Schritt
+    function previousStep() {
+        const currentStep = document.querySelector('.wizard-step.active');
+        if (currentStep) {
+            const prevStep = currentStep.previousElementSibling;
+            if (prevStep && prevStep.classList.contains('wizard-step')) {
+                currentStep.classList.remove('active');
+                prevStep.classList.add('active');
+                updateProgressBar();
+            }
+        }
+    }
+
+    // Schritt validieren
+    function validateStep(step) {
+        const inputs = step.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!input.validity.valid) {
+                isValid = false;
+                input.classList.add('is-invalid');
+            }
+        });
+        return isValid;
+    }
+
+    // Progress Bar aktualisieren
+    function updateProgressBar() {
+        const steps = document.querySelectorAll('.wizard-step');
+        const progressSteps = document.querySelectorAll('.progress-step');
+        const activeStep = document.querySelector('.wizard-step.active');
+        
+        if (steps.length > 0 && progressSteps.length > 0 && activeStep) {
+            const stepIndex = Array.from(steps).indexOf(activeStep);
+            progressSteps.forEach((step, index) => {
+                if (index <= stepIndex) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        }
     }
 
     // Input Validierung
@@ -1122,65 +1195,31 @@
         }
     }
 
-    // Form Validierung
-    function validateForm(form) {
-        let isValid = true;
-        form.querySelectorAll('input, select').forEach(input => {
-            if (!input.validity.valid) {
-                isValid = false;
-                input.classList.add('is-invalid');
-            }
-        });
-        return isValid;
-    }
-
-    // Modal verstecken Event Handler
-    function handleModalHidden() {
-        const form = document.getElementById('registrationForm');
-        form.reset();
-        form.querySelectorAll('.is-invalid, .is-valid').forEach(input => {
-            input.classList.remove('is-invalid', 'is-valid');
-        });
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-    }
-
-    // Toast Benachrichtigung anzeigen
-    function showNotification(message, type = 'success') {
-        const toast = document.getElementById('notificationToast');
-        toast.querySelector('.toast-body').textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger');
-        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        notificationToast.show();
-    }
-
     // Registrierungs-Handler
     async function handleRegistration(event) {
         event.preventDefault();
-        const form = event.target;
         
-        // Form validieren
+        const form = event.target;
         if (!validateForm(form)) {
             return;
         }
 
-        // UI-Elemente aktualisieren
         const submitButton = form.querySelector('button[type="submit"]');
         const spinner = submitButton.querySelector('.spinner-border');
-        submitButton.disabled = true;
-        spinner.classList.remove('d-none');
-
-        const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            date: document.getElementById('date').value,
-            time_slot: document.getElementById('timeSlot').value,
-            route_id: {{ route.id }}
-        };
-
+        
         try {
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                route_id: {{ route.id }},
+                date: document.getElementById('date').value,
+                time_slot: document.getElementById('timeSlot').value
+            };
+
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: {
@@ -1192,20 +1231,6 @@
             const data = await response.json();
 
             if (data.success) {
-                // Modal manuell schließen
-                const modalElement = document.getElementById('registrationModal');
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                modal.hide();
-                
-                // Backdrop und Klassen entfernen
-                document.body.classList.remove('modal-open');
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.remove();
-                }
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                
                 showNotification('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
                 setTimeout(() => window.location.reload(), FORM_SUBMISSION_DELAY);
             } else {
@@ -1218,6 +1243,29 @@
             submitButton.disabled = false;
             spinner.classList.add('d-none');
         }
+    }
+
+    // Form Validierung
+    function validateForm(form) {
+        const inputs = form.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!input.validity.valid) {
+                isValid = false;
+                input.classList.add('is-invalid');
+            }
+        });
+        return isValid;
+    }
+
+    // Toast Benachrichtigung anzeigen
+    function showNotification(message, type = 'success') {
+        const toast = document.getElementById('notificationToast');
+        const toastBody = toast.querySelector('.toast-body');
+        toastBody.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        notificationToast.show();
     }
 
     // Map initialisieren
@@ -1397,143 +1445,6 @@
             map.setZoom(map.getZoom() - 1);
         });
     }
-
-    // Wizard Funktionalität
-    let currentStep = 1;
-    const totalSteps = 3;
-
-    function updateWizardProgress() {
-        document.querySelectorAll('.progress-step').forEach(step => {
-            const stepNum = parseInt(step.dataset.step);
-            step.classList.remove('active', 'completed');
-            if (stepNum === currentStep) {
-                step.classList.add('active');
-            } else if (stepNum < currentStep) {
-                step.classList.add('completed');
-            }
-        });
-    }
-
-    function showStep(step) {
-        document.querySelectorAll('.wizard-step').forEach(s => {
-            s.classList.remove('active');
-        });
-        document.querySelector(`.wizard-step[data-step="${step}"]`).classList.add('active');
-        
-        // Button Sichtbarkeit
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        prevBtn.style.display = step > 1 ? 'block' : 'none';
-        nextBtn.style.display = step < totalSteps ? 'block' : 'none';
-        submitBtn.style.display = step === totalSteps ? 'block' : 'none';
-    }
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        if (validateCurrentStep()) {
-            currentStep++;
-            showStep(currentStep);
-            updateWizardProgress();
-        }
-    });
-
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        currentStep--;
-        showStep(currentStep);
-        updateWizardProgress();
-    });
-
-    // Datum-Picker initialisieren
-    function initDatePicker() {
-        const datePicker = document.getElementById('datePicker');
-        const dateInput = document.getElementById('date');
-        
-        // Nächste 14 Tage generieren
-        const dates = [];
-        for (let i = 0; i < 14; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() + i);
-            dates.push(date);
-        }
-        
-        // Datum-Optionen erstellen
-        dates.forEach(date => {
-            const option = document.createElement('div');
-            option.className = 'date-option';
-            option.dataset.value = date.toISOString().split('T')[0];
-            option.textContent = date.toLocaleDateString('de-DE', {
-                weekday: 'short',
-                day: '2-digit',
-                month: '2-digit'
-            });
-            
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.date-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                option.classList.add('selected');
-                dateInput.value = option.dataset.value;
-            });
-            
-            datePicker.appendChild(option);
-        });
-    }
-
-    // Zeitfenster-Picker initialisieren
-    function initTimeSlotPicker() {
-        const timeSlotInput = document.getElementById('timeSlot');
-        document.querySelectorAll('.time-slot-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.time-slot-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                option.classList.add('selected');
-                timeSlotInput.value = option.dataset.value;
-            });
-        });
-    }
-
-    // Validierung des aktuellen Schritts
-    function validateCurrentStep() {
-        const currentStepElement = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
-        let isValid = true;
-        
-        if (currentStep === 1) {
-            // Validiere persönliche Daten
-            currentStepElement.querySelectorAll('input[required]').forEach(input => {
-                if (!input.validity.valid) {
-                    isValid = false;
-                    input.classList.add('is-invalid');
-                } else {
-                    input.classList.remove('is-invalid');
-                }
-            });
-        } else if (currentStep === 2) {
-            // Validiere Datum
-            const dateInput = document.getElementById('date');
-            if (!dateInput.value) {
-                isValid = false;
-                showNotification('Bitte wählen Sie ein Datum aus.', 'error');
-            }
-        } else if (currentStep === 3) {
-            // Validiere Zeitfenster
-            const timeSlotInput = document.getElementById('timeSlot');
-            if (!timeSlotInput.value) {
-                isValid = false;
-                showNotification('Bitte wählen Sie ein Zeitfenster aus.', 'error');
-            }
-        }
-        
-        return isValid;
-    }
-
-    // Initialisierung
-    document.addEventListener('DOMContentLoaded', () => {
-        initDatePicker();
-        initTimeSlotPicker();
-        updateWizardProgress();
-    });
 
     // Mini-Karte Toggle
     let miniMap;
