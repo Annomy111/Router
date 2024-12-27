@@ -227,13 +227,172 @@
     }
 
     .modal {
-        background: transparent !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .modal-dialog {
+        position: relative;
+        width: auto;
+        max-width: 500px;
+        margin: 1.75rem auto !important;
+        pointer-events: none;
     }
 
     .modal-content {
-        border-radius: 12px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        pointer-events: auto;
+        background-color: #fff;
         border: none;
+        border-radius: 12px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        outline: 0;
+    }
+
+    .modal-header {
+        background-color: var(--spd-red);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-title {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 1;
+        text-shadow: none;
+        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .wizard-progress {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        padding: 0 1.5rem;
+    }
+
+    .wizard-progress::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 2rem;
+        right: 2rem;
+        height: 2px;
+        background: var(--spd-light-gray);
+        z-index: 1;
+    }
+
+    .progress-step {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--spd-light-gray);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.active {
+        border-color: var(--spd-red);
+        background: var(--spd-red);
+        color: white;
+    }
+
+    .wizard-step {
+        display: none;
+    }
+
+    .wizard-step.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--spd-dark-gray);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid var(--spd-light-gray);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--spd-red);
+        box-shadow: 0 0 0 0.2rem rgba(227, 0, 15, 0.1);
+    }
+
+    .btn-primary {
+        background: var(--spd-red);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: var(--spd-dark-red);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: var(--spd-light-gray);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        color: var(--spd-dark-gray);
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: var(--spd-gray);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .modal {
+            padding: 0.5rem;
+        }
+
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+
+        .wizard-progress {
+            padding: 0 1rem;
+        }
     }
 
     /* Index Styles */
@@ -674,6 +833,13 @@
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         }
     }
+
+    @media (max-width: 576px) {
+        .modal-dialog {
+            margin: 0.5rem !important;
+            max-width: calc(100% - 1rem);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -738,7 +904,7 @@
                             <p class="lead">
                                 Diese Route wurde für Jan Dierens Haustürwahlkampf 2025 optimiert.
                                 Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz im Zweierteam ausgelegt.
-                                Gemeinsam sprechen wir mit den Menschen über bezahlbares Wohnen, gute Arbeit und die Zukunft unserer Region.
+                                Gemeinsam sprechen wir mit den Menschen über bezahlbares Wohnen, gute Arbeit und unsere Zukunft.
                             </p>
                             <div class="row">
                                 <div class="col-md-6">
@@ -870,7 +1036,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true" data-bs-backdrop="false">
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -879,7 +1045,8 @@
             </div>
             <div class="modal-body">
                 <form id="registrationForm" class="form-wizard">
-                    <div class="wizard-progress">
+                    <!-- Fortschrittsanzeige -->
+                    <div class="wizard-progress mb-4">
                         <div class="progress-step active" data-step="1">1</div>
                         <div class="progress-step" data-step="2">2</div>
                         <div class="progress-step" data-step="3">3</div>
@@ -890,63 +1057,54 @@
                         <h6 class="mb-3">Persönliche Daten</h6>
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required 
-                                   pattern="[A-Za-zÄäÖöÜüß\s-]{2,50}" 
-                                   title="Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen)">
-                            <div class="invalid-feedback">
-                                Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen).
-                            </div>
+                            <input type="text" class="form-control" id="name" name="name" required>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">E-Mail</label>
                             <input type="email" class="form-control" id="email" name="email" required>
-                            <div class="invalid-feedback">
-                                Bitte geben Sie eine gültige E-Mail-Adresse ein.
-                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="phone" class="form-label">Telefon (optional)</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" 
-                                   pattern="[0-9+\s-]{6,20}">
-                            <div class="invalid-feedback">
-                                Bitte geben Sie eine gültige Telefonnummer ein.
-                            </div>
+                            <label for="phone" class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
                         </div>
                     </div>
                     
-                    <!-- Schritt 2: Datum wählen -->
+                    <!-- Schritt 2: Zeitauswahl -->
                     <div class="wizard-step" data-step="2">
-                        <h6 class="mb-3">Datum wählen</h6>
-                        <div class="date-picker" id="datePicker">
-                            <!-- Wird dynamisch gefüllt -->
+                        <h6 class="mb-3">Zeitauswahl</h6>
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Datum</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
                         </div>
-                        <input type="hidden" id="date" name="date" required>
+                        <div class="mb-3">
+                            <label for="timeSlot" class="form-label">Zeitfenster</label>
+                            <select class="form-control" id="timeSlot" name="timeSlot" required>
+                                <option value="">Bitte wählen...</option>
+                                <option value="morning">Vormittags (10-13 Uhr)</option>
+                                <option value="afternoon">Nachmittags (14-17 Uhr)</option>
+                                <option value="evening">Abends (17-20 Uhr)</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <!-- Schritt 3: Zeitfenster wählen -->
+                    <!-- Schritt 3: Bestätigung -->
                     <div class="wizard-step" data-step="3">
-                        <h6 class="mb-3">Zeitfenster wählen</h6>
-                        <div class="time-slot-picker">
-                            <div class="time-slot-option" data-value="17-19 Uhr">
-                                <i class="far fa-clock"></i> Werktags 17-19 Uhr
-                            </div>
-                            <div class="time-slot-option" data-value="11-13 Uhr">
-                                <i class="far fa-clock"></i> Samstags 11-13 Uhr
+                        <h6 class="mb-4">Bestätigung</h6>
+                        <div class="confirmation-details">
+                            <p class="mb-2">Bitte überprüfen Sie Ihre Eingaben:</p>
+                            <div id="summaryDetails" class="p-3 bg-light rounded">
+                                <!-- Wird dynamisch gefüllt -->
                             </div>
                         </div>
-                        <input type="hidden" id="timeSlot" name="timeSlot" required>
                     </div>
-                    
-                    <div class="wizard-buttons">
-                        <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
-                            Zurück
-                        </button>
-                        <button type="button" class="btn btn-primary" id="nextBtn">
-                            Weiter
-                        </button>
-                        <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
-                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                            Reservieren
+
+                    <!-- Navigation -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Zurück</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn">Weiter</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">
+                            Reservierung bestätigen
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                         </button>
                     </div>
                 </form>
