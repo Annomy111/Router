@@ -105,10 +105,50 @@
     }
 
     .map-container {
-        height: 400px;
+        position: relative;
+        width: 100%;
+        height: 50vh;
+        min-height: 300px;
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 2rem;
+    }
+    
+    .map-fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1050;
+        border-radius: 0;
+    }
+    
+    .map-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    
+    .map-control-btn {
+        background: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        cursor: pointer;
+        margin-left: 5px;
+    }
+    
+    .map-control-btn:hover {
+        background: #f8f9fa;
+    }
+    
+    @media (max-width: 768px) {
+        .map-container {
+            height: 40vh;
+        }
     }
 
     .registration-section {
@@ -197,6 +237,253 @@
     .modal-content {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     }
+
+    /* Index Styles */
+    .index-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .index-label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .index-icon {
+        margin-right: 0.5rem;
+        color: var(--spd-red);
+    }
+    
+    .progress {
+        background: linear-gradient(to right, #ffebee, #ffcdd2);
+        height: 25px;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(to right, var(--spd-red), var(--spd-dark-red));
+        transition: width 0.6s ease;
+    }
+    
+    .progress-tooltip {
+        position: relative;
+        cursor: help;
+    }
+    
+    .progress-tooltip:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+
+    /* Timeline Styles */
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 100%;
+        background: var(--spd-light-gray);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    
+    .timeline-content {
+        position: relative;
+        width: calc(50% - 30px);
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-item:nth-child(odd) .timeline-content {
+        margin-left: auto;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--spd-red);
+        z-index: 1;
+    }
+    
+    .timeline-date {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: var(--spd-dark-red);
+    }
+    
+    .timeline-slot {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: var(--spd-light-gray);
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .timeline-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    @media (max-width: 768px) {
+        .timeline::before {
+            left: 30px;
+        }
+        
+        .timeline-content {
+            width: calc(100% - 60px);
+            margin-left: 60px !important;
+        }
+        
+        .timeline-item::before {
+            left: 30px;
+        }
+    }
+
+    /* Form Wizard Styles */
+    .form-wizard {
+        position: relative;
+    }
+    
+    .wizard-step {
+        display: none;
+    }
+    
+    .wizard-step.active {
+        display: block;
+    }
+    
+    .wizard-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .wizard-progress::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--spd-light-gray);
+        z-index: 1;
+    }
+    
+    .progress-step {
+        position: relative;
+        z-index: 2;
+        background: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid var(--spd-light-gray);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step.active {
+        border-color: var(--spd-red);
+        background: var(--spd-red);
+        color: white;
+    }
+    
+    .progress-step.completed {
+        border-color: var(--spd-red);
+        background: white;
+        color: var(--spd-red);
+    }
+    
+    .wizard-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+    
+    /* Date Picker Styles */
+    .date-picker {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    .date-option {
+        padding: 10px;
+        border: 2px solid var(--spd-light-gray);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .date-option:hover {
+        border-color: var(--spd-red);
+    }
+    
+    .date-option.selected {
+        background: var(--spd-red);
+        border-color: var(--spd-red);
+        color: white;
+    }
+    
+    .time-slot-picker {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    .time-slot-option {
+        padding: 10px;
+        border: 2px solid var(--spd-light-gray);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .time-slot-option:hover {
+        border-color: var(--spd-red);
+    }
+    
+    .time-slot-option.selected {
+        background: var(--spd-red);
+        border-color: var(--spd-red);
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -214,9 +501,13 @@
                         </div>
 
                         <div class="route-stats">
-                            <div class="stat-card">
-                                <h3>Mobilisierungsindex</h3>
-                                <div class="progress">
+                            <div class="index-container">
+                                <div class="index-label">
+                                    <i class="fas fa-bullhorn index-icon" title="Mobilisierungsindex"></i>
+                                    <strong>Mobilisierung</strong>
+                                </div>
+                                <div class="progress progress-tooltip" 
+                                     data-tooltip="Zeigt an, wie gut sich die Route für Mobilisierung eignet ({{ route.mobilization_index }}/3)">
                                     <div class="progress-bar" 
                                          role="progressbar" 
                                          style="width: {{ (route.mobilization_index/3*100)|round }}%">
@@ -224,9 +515,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="stat-card">
-                                <h3>Überzeugungsindex</h3>
-                                <div class="progress">
+                            <div class="index-container">
+                                <div class="index-label">
+                                    <i class="fas fa-handshake index-icon" title="Überzeugungsindex"></i>
+                                    <strong>Überzeugung</strong>
+                                </div>
+                                <div class="progress progress-tooltip"
+                                     data-tooltip="Zeigt an, wie hoch das Überzeugungspotenzial in dieser Route ist ({{ route.conviction_index }}/3)">
                                     <div class="progress-bar" 
                                          role="progressbar" 
                                          style="width: {{ (route.conviction_index/3*100)|round }}%">
@@ -299,19 +594,29 @@
                         <div class="registration-section">
                             <h2>Registrierungen</h2>
                             {% if registrations %}
-                            {% for reg in registrations %}
-                            <div class="registration-card">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 class="mb-1">{{ reg.volunteer.name }}</h5>
-                                        <p class="text-muted mb-0">{{ reg.date.strftime('%d.%m.%Y') }} - {{ reg.time_slot }}</p>
+                            <div class="timeline">
+                                {% for reg in registrations|sort(attribute='date') %}
+                                <div class="timeline-item">
+                                    <div class="timeline-content">
+                                        <div class="timeline-date">
+                                            {{ reg.date.strftime('%d.%m.%Y') }}
+                                        </div>
+                                        <div class="timeline-slot">
+                                            <i class="far fa-clock"></i> {{ reg.time_slot }}
+                                        </div>
+                                        <div class="timeline-volunteer">
+                                            <i class="far fa-user"></i> {{ reg.volunteer.name }}
+                                        </div>
+                                        <span class="badge timeline-status 
+                                            {% if reg.status == 'geplant' %}bg-warning
+                                            {% elif reg.status == 'abgeschlossen' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ reg.status }}
+                                        </span>
                                     </div>
-                                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
-                                        {{ reg.status }}
-                                    </span>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                             {% else %}
                             <p class="text-muted">Noch keine Registrierungen für diese Route.</p>
                             {% endif %}
@@ -323,7 +628,20 @@
             <!-- Google Maps Container -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <div id="map" style="height: 400px; width: 100%;"></div>
+                    <div class="map-container" id="mapContainer">
+                        <div id="map" style="width: 100%; height: 100%;"></div>
+                        <div class="map-controls">
+                            <button class="map-control-btn" id="fullscreenBtn" title="Vollbild">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button class="map-control-btn" id="zoomInBtn" title="Vergrößern">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="map-control-btn" id="zoomOutBtn" title="Verkleinern">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -370,52 +688,73 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required 
-                               pattern="[A-Za-zÄäÖöÜüß\s-]{2,50}" 
-                               title="Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen)">
-                        <div class="invalid-feedback">
-                            Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen).
+                <form id="registrationForm" class="form-wizard">
+                    <div class="wizard-progress">
+                        <div class="progress-step active" data-step="1">1</div>
+                        <div class="progress-step" data-step="2">2</div>
+                        <div class="progress-step" data-step="3">3</div>
+                    </div>
+                    
+                    <!-- Schritt 1: Persönliche Daten -->
+                    <div class="wizard-step active" data-step="1">
+                        <h6 class="mb-3">Persönliche Daten</h6>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   pattern="[A-Za-zÄäÖöÜüß\s-]{2,50}" 
+                                   title="Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen)">
+                            <div class="invalid-feedback">
+                                Bitte geben Sie einen gültigen Namen ein (2-50 Zeichen).
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-Mail</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="invalid-feedback">
+                                Bitte geben Sie eine gültige E-Mail-Adresse ein.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Telefon (optional)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   pattern="[0-9+\s-]{6,20}">
+                            <div class="invalid-feedback">
+                                Bitte geben Sie eine gültige Telefonnummer ein.
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">E-Mail</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                        <div class="invalid-feedback">
-                            Bitte geben Sie eine gültige E-Mail-Adresse ein.
+                    
+                    <!-- Schritt 2: Datum wählen -->
+                    <div class="wizard-step" data-step="2">
+                        <h6 class="mb-3">Datum wählen</h6>
+                        <div class="date-picker" id="datePicker">
+                            <!-- Wird dynamisch gefüllt -->
                         </div>
+                        <input type="hidden" id="date" name="date" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Telefon (optional)</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" 
-                               pattern="[0-9+\s-]{6,20}">
-                        <div class="invalid-feedback">
-                            Bitte geben Sie eine gültige Telefonnummer ein.
+                    
+                    <!-- Schritt 3: Zeitfenster wählen -->
+                    <div class="wizard-step" data-step="3">
+                        <h6 class="mb-3">Zeitfenster wählen</h6>
+                        <div class="time-slot-picker">
+                            <div class="time-slot-option" data-value="17-19 Uhr">
+                                <i class="far fa-clock"></i> Werktags 17-19 Uhr
+                            </div>
+                            <div class="time-slot-option" data-value="11-13 Uhr">
+                                <i class="far fa-clock"></i> Samstags 11-13 Uhr
+                            </div>
                         </div>
+                        <input type="hidden" id="timeSlot" name="timeSlot" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Datum</label>
-                        <input type="date" class="form-control" id="date" name="date" required>
-                        <div class="invalid-feedback">
-                            Bitte wählen Sie ein gültiges Datum aus.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="timeSlot" class="form-label">Zeitfenster</label>
-                        <select class="form-select" id="timeSlot" name="timeSlot" required>
-                            <option value="">Bitte wählen...</option>
-                            <option value="17-19 Uhr">Werktags 17-19 Uhr</option>
-                            <option value="11-13 Uhr">Samstags 11-13 Uhr</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Bitte wählen Sie ein Zeitfenster aus.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                        <button type="submit" class="btn btn-primary" id="submitButton">
+                    
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
+                            Zurück
+                        </button>
+                        <button type="button" class="btn btn-primary" id="nextBtn">
+                            Weiter
+                        </button>
+                        <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
                             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             Reservieren
                         </button>
@@ -609,6 +948,7 @@
             setupRouteMarker(routeCenter);
             setupMeetingPoint();
             setupDirections();
+            setupMapControls();
         } catch (error) {
             console.error('Error initializing map:', error);
             showNotification('Fehler beim Laden der Karte.', 'error');
@@ -749,5 +1089,166 @@
             console.error('Error saving route coordinates:', error);
         }
     }
+
+    // Karten-Kontrollen
+    function setupMapControls() {
+        const mapContainer = document.getElementById('mapContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        
+        fullscreenBtn.addEventListener('click', () => {
+            mapContainer.classList.toggle('map-fullscreen');
+            const icon = fullscreenBtn.querySelector('i');
+            icon.classList.toggle('fa-expand');
+            icon.classList.toggle('fa-compress');
+            google.maps.event.trigger(map, 'resize');
+        });
+        
+        zoomInBtn.addEventListener('click', () => {
+            map.setZoom(map.getZoom() + 1);
+        });
+        
+        zoomOutBtn.addEventListener('click', () => {
+            map.setZoom(map.getZoom() - 1);
+        });
+    }
+
+    // Wizard Funktionalität
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function updateWizardProgress() {
+        document.querySelectorAll('.progress-step').forEach(step => {
+            const stepNum = parseInt(step.dataset.step);
+            step.classList.remove('active', 'completed');
+            if (stepNum === currentStep) {
+                step.classList.add('active');
+            } else if (stepNum < currentStep) {
+                step.classList.add('completed');
+            }
+        });
+    }
+
+    function showStep(step) {
+        document.querySelectorAll('.wizard-step').forEach(s => {
+            s.classList.remove('active');
+        });
+        document.querySelector(`.wizard-step[data-step="${step}"]`).classList.add('active');
+        
+        // Button Sichtbarkeit
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        prevBtn.style.display = step > 1 ? 'block' : 'none';
+        nextBtn.style.display = step < totalSteps ? 'block' : 'none';
+        submitBtn.style.display = step === totalSteps ? 'block' : 'none';
+    }
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (validateCurrentStep()) {
+            currentStep++;
+            showStep(currentStep);
+            updateWizardProgress();
+        }
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        currentStep--;
+        showStep(currentStep);
+        updateWizardProgress();
+    });
+
+    // Datum-Picker initialisieren
+    function initDatePicker() {
+        const datePicker = document.getElementById('datePicker');
+        const dateInput = document.getElementById('date');
+        
+        // Nächste 14 Tage generieren
+        const dates = [];
+        for (let i = 0; i < 14; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() + i);
+            dates.push(date);
+        }
+        
+        // Datum-Optionen erstellen
+        dates.forEach(date => {
+            const option = document.createElement('div');
+            option.className = 'date-option';
+            option.dataset.value = date.toISOString().split('T')[0];
+            option.textContent = date.toLocaleDateString('de-DE', {
+                weekday: 'short',
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.date-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+                dateInput.value = option.dataset.value;
+            });
+            
+            datePicker.appendChild(option);
+        });
+    }
+
+    // Zeitfenster-Picker initialisieren
+    function initTimeSlotPicker() {
+        const timeSlotInput = document.getElementById('timeSlot');
+        document.querySelectorAll('.time-slot-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.time-slot-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+                timeSlotInput.value = option.dataset.value;
+            });
+        });
+    }
+
+    // Validierung des aktuellen Schritts
+    function validateCurrentStep() {
+        const currentStepElement = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+        let isValid = true;
+        
+        if (currentStep === 1) {
+            // Validiere persönliche Daten
+            currentStepElement.querySelectorAll('input[required]').forEach(input => {
+                if (!input.validity.valid) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+        } else if (currentStep === 2) {
+            // Validiere Datum
+            const dateInput = document.getElementById('date');
+            if (!dateInput.value) {
+                isValid = false;
+                showNotification('Bitte wählen Sie ein Datum aus.', 'error');
+            }
+        } else if (currentStep === 3) {
+            // Validiere Zeitfenster
+            const timeSlotInput = document.getElementById('timeSlot');
+            if (!timeSlotInput.value) {
+                isValid = false;
+                showNotification('Bitte wählen Sie ein Zeitfenster aus.', 'error');
+            }
+        }
+        
+        return isValid;
+    }
+
+    // Initialisierung
+    document.addEventListener('DOMContentLoaded', () => {
+        initDatePicker();
+        initTimeSlotPicker();
+        updateWizardProgress();
+    });
 </script>
 {% endblock %} 
