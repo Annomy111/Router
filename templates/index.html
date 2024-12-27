@@ -179,6 +179,86 @@
         font-weight: bold;
         color: white;
     }
+
+    /* Mobile Navigation */
+    .mobile-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1030;
+        display: none;
+    }
+
+    .mobile-city-nav {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.5rem 1rem;
+        margin: 0 -1rem;
+        background: var(--spd-light-gray);
+    }
+
+    .mobile-city-nav .btn {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+    }
+
+    .route-card {
+        margin-bottom: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .route-card:active {
+        transform: scale(0.98);
+    }
+
+    .route-stats {
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+        margin: 0 -0.5rem;
+    }
+
+    .stat-badge {
+        flex: 0 0 auto;
+        margin: 0 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--spd-light-gray);
+        border-radius: 1rem;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding-top: 60px;
+        }
+
+        .mobile-header {
+            display: block;
+        }
+
+        .container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .route-card {
+            margin-left: -0.5rem;
+            margin-right: -0.5rem;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .route-stats {
+            margin: 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -310,5 +390,73 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <h5 class="mb-0">Routen</h5>
+</div>
+
+<!-- Stadt-Navigation -->
+<div class="mobile-city-nav mb-3">
+    <button class="btn btn-outline-primary" onclick="filterByCity('Krefeld')">Krefeld</button>
+    <button class="btn btn-outline-primary" onclick="filterByCity('Moers')">Moers</button>
+    <button class="btn btn-outline-primary" onclick="filterByCity('Neukirchen-Vluyn')">Neukirchen-Vluyn</button>
+</div>
+
+<script>
+// Stadt-Filter
+function filterByCity(city) {
+    const cards = document.querySelectorAll('.route-card');
+    cards.forEach(card => {
+        if (city === 'all' || card.dataset.city === city) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Touch Events für Karten
+document.querySelectorAll('.route-card').forEach(card => {
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    card.addEventListener('touchstart', e => {
+        touchStartY = e.changedTouches[0].screenY;
+    });
+
+    card.addEventListener('touchend', e => {
+        touchEndY = e.changedTouches[0].screenY;
+        const diff = touchEndY - touchStartY;
+        
+        if (Math.abs(diff) > 50) {
+            if (diff < 0) {
+                // Swipe up - Öffne Details
+                window.location.href = card.dataset.url;
+            }
+        }
+    });
+});
+
+// Scroll Handler für Stadt-Navigation
+const cityNav = document.querySelector('.mobile-city-nav');
+let isScrolling;
+
+cityNav.addEventListener('scroll', () => {
+    window.clearTimeout(isScrolling);
+    isScrolling = setTimeout(() => {
+        const scrollLeft = cityNav.scrollLeft;
+        const width = cityNav.offsetWidth;
+        const scrollWidth = cityNav.scrollWidth;
+        
+        if (scrollLeft + width >= scrollWidth) {
+            cityNav.scrollTo({
+                left: 0,
+                behavior: 'smooth'
+            });
+        }
+    }, 66);
+});
+</script>
 </body>
 {% endblock %} 

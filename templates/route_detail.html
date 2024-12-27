@@ -484,6 +484,181 @@
         border-color: var(--spd-red);
         color: white;
     }
+
+    /* Mobile Navigation Styles */
+    .mobile-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1030;
+        display: none;
+    }
+
+    .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 0.5rem;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        z-index: 1030;
+        display: none;
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+        color: var(--spd-gray);
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+
+    .mobile-nav-item i {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .mobile-nav-item.active {
+        color: var(--spd-red);
+    }
+
+    /* Statistik-Karussell */
+    .stats-carousel {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        scroll-padding: 0 1rem;
+    }
+
+    .stat-card {
+        flex: 0 0 auto;
+        width: 200px;
+        margin-right: 1rem;
+        scroll-snap-align: start;
+    }
+
+    .stat-ring {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+    }
+
+    .stat-ring-circle {
+        stroke: var(--spd-red);
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        transition: stroke-dashoffset 0.6s ease;
+    }
+
+    .stat-ring-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--spd-dark-red);
+    }
+
+    /* Horizontale Timeline */
+    .timeline-horizontal {
+        display: none;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 1rem 0;
+        margin: 0 -1rem;
+    }
+
+    .timeline-item-horizontal {
+        display: inline-block;
+        width: 250px;
+        margin-right: 1rem;
+        white-space: normal;
+        vertical-align: top;
+    }
+
+    /* Mini-Karte */
+    .mini-map {
+        position: fixed;
+        bottom: 70px;
+        right: 1rem;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 1020;
+    }
+
+    .mini-map-close {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding-top: 60px;
+            padding-bottom: 60px;
+        }
+
+        .mobile-header,
+        .mobile-bottom-nav {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .timeline {
+            display: none;
+        }
+
+        .timeline-horizontal {
+            display: block;
+        }
+
+        .map-container {
+            height: 40vh;
+        }
+
+        .mini-map {
+            display: block;
+        }
+
+        .route-stats {
+            display: block;
+            margin: 0 -1rem;
+        }
+
+        .stats-carousel {
+            display: flex;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -763,6 +938,104 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <h5 class="mb-0">{{ route.street }}</h5>
+    <button class="btn btn-sm btn-outline-primary" onclick="toggleMiniMap()">
+        <i class="fas fa-map"></i>
+    </button>
+</div>
+
+<!-- Mobile Bottom Navigation -->
+<div class="mobile-bottom-nav">
+    <a href="#info" class="mobile-nav-item active">
+        <i class="fas fa-info-circle"></i>
+        Info
+    </a>
+    <a href="#map" class="mobile-nav-item">
+        <i class="fas fa-map-marker-alt"></i>
+        Karte
+    </a>
+    <a href="#registrations" class="mobile-nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        Termine
+    </a>
+    <button class="mobile-nav-item" data-bs-toggle="modal" data-bs-target="#registrationModal">
+        <i class="fas fa-plus-circle"></i>
+        Reservieren
+    </button>
+</div>
+
+<!-- Mini-Karte -->
+<div class="mini-map" id="miniMap">
+    <div id="miniMapContent" style="width: 100%; height: 100%;"></div>
+    <button class="mini-map-close" onclick="toggleMiniMap()">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+
+<!-- Ersetze die bestehenden Statistik-Karten -->
+<div class="stats-carousel">
+    <div class="stat-card">
+        <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" class="stat-ring-circle" 
+                        style="stroke-dasharray: 251.2; stroke-dashoffset: {{ 251.2 - (251.2 * route.mobilization_index/3) }}">
+                </circle>
+            </svg>
+            <div class="stat-ring-text">{{ route.mobilization_index }}/3</div>
+        </div>
+        <h3>Mobilisierung</h3>
+    </div>
+    <div class="stat-card">
+        <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" class="stat-ring-circle"
+                        style="stroke-dasharray: 251.2; stroke-dashoffset: {{ 251.2 - (251.2 * route.conviction_index/3) }}">
+                </circle>
+            </svg>
+            <div class="stat-ring-text">{{ route.conviction_index }}/3</div>
+        </div>
+        <h3>Überzeugung</h3>
+    </div>
+    {% if route.households %}
+    <div class="stat-card">
+        <div class="stat-ring">
+            <div class="stat-ring-text">{{ route.households }}</div>
+        </div>
+        <h3>Haushalte</h3>
+    </div>
+    {% endif %}
+    {% if route.rental_percentage %}
+    <div class="stat-card">
+        <div class="stat-ring">
+            <div class="stat-ring-text">{{ "%.0f"|format(route.rental_percentage) }}%</div>
+        </div>
+        <h3>Mietquote</h3>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Horizontale Timeline für Mobile -->
+<div class="timeline-horizontal">
+    {% for reg in registrations|sort(attribute='date') %}
+    <div class="timeline-item-horizontal">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-1">{{ reg.date.strftime('%d.%m.%Y') }}</h6>
+                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ reg.status }}
+                    </span>
+                </div>
+                <p class="mb-1"><i class="far fa-clock"></i> {{ reg.time_slot }}</p>
+                <p class="mb-0"><i class="far fa-user"></i> {{ reg.volunteer.name }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
 <script>
@@ -1250,5 +1523,106 @@
         initTimeSlotPicker();
         updateWizardProgress();
     });
+
+    // Mini-Karte Toggle
+    let miniMap;
+    let isMiniMapVisible = false;
+
+    function toggleMiniMap() {
+        const miniMapElement = document.getElementById('miniMap');
+        if (!isMiniMapVisible) {
+            miniMapElement.style.display = 'block';
+            if (!miniMap) {
+                initMiniMap();
+            }
+            isMiniMapVisible = true;
+        } else {
+            miniMapElement.style.display = 'none';
+            isMiniMapVisible = false;
+        }
+    }
+
+    function initMiniMap() {
+        const center = {
+            lat: {{ route.lat|default(MAP_DEFAULT_LAT) }},
+            lng: {{ route.lon|default(MAP_DEFAULT_LON) }}
+        };
+        
+        miniMap = new google.maps.Map(document.getElementById('miniMapContent'), {
+            zoom: 14,
+            center: center,
+            disableDefaultUI: true,
+            gestureHandling: 'none'
+        });
+        
+        new google.maps.Marker({
+            position: center,
+            map: miniMap,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#E3000F",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff"
+            }
+        });
+    }
+
+    // Mobile Navigation
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (!this.hasAttribute('data-bs-toggle')) {
+                e.preventDefault();
+                document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const target = this.getAttribute('href').substring(1);
+                document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Scroll Handler für Mini-Karte
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+        const st = window.pageYOffset || document.documentElement.scrollTop;
+        const mapContainer = document.getElementById('mapContainer');
+        const mapRect = mapContainer.getBoundingClientRect();
+        
+        if (mapRect.bottom < 0 && st > lastScrollTop) {
+            document.getElementById('miniMap').style.display = 'block';
+        } else {
+            document.getElementById('miniMap').style.display = 'none';
+        }
+        lastScrollTop = st <= 0 ? 0 : st;
+    });
+
+    // Touch Events für Karte
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.querySelector('.map-container').addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.querySelector('.map-container').addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchEndX - touchStartX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // Swipe right - Zoom out
+                map.setZoom(map.getZoom() - 1);
+            } else {
+                // Swipe left - Zoom in
+                map.setZoom(map.getZoom() + 1);
+            }
+        }
+    }
 </script>
 {% endblock %} 
