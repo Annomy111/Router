@@ -1204,81 +1204,97 @@
     </div>
 </div>
 
-<!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" 
-     tabindex="-1" 
-     aria-labelledby="registrationModalLabel" 
-     aria-hidden="true"
-     data-route-id="{{ route.id }}">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Registrierungsformular -->
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Route reservieren</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="registrationModalLabel">Als Freiwilliger registrieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm" class="form-wizard">
-                    <!-- Fortschrittsanzeige -->
+                <form id="registrationForm" class="needs-validation" novalidate>
+                    <!-- Progress Bar -->
                     <div class="wizard-progress mb-4">
                         <div class="progress-step active" data-step="1">1</div>
                         <div class="progress-step" data-step="2">2</div>
                         <div class="progress-step" data-step="3">3</div>
                     </div>
-                    
+
                     <!-- Schritt 1: Persönliche Daten -->
-                    <div class="wizard-step active" data-step="1">
+                    <div class="wizard-step active">
                         <h6 class="mb-3">Persönliche Daten</h6>
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
                             <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="invalid-feedback">
+                                Bitte geben Sie Ihren Namen ein.
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">E-Mail</label>
                             <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="invalid-feedback">
+                                Bitte geben Sie eine gültige E-Mail-Adresse ein.
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Telefon</label>
                             <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <div class="invalid-feedback">
+                                Bitte geben Sie Ihre Telefonnummer ein.
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-primary btn-next">Weiter</button>
                         </div>
                     </div>
-                    
+
                     <!-- Schritt 2: Zeitauswahl -->
-                    <div class="wizard-step" data-step="2">
+                    <div class="wizard-step">
                         <h6 class="mb-3">Zeitauswahl</h6>
                         <div class="mb-3">
                             <label for="date" class="form-label">Datum</label>
                             <input type="date" class="form-control" id="date" name="date" required>
+                            <div class="invalid-feedback">
+                                Bitte wählen Sie ein Datum aus.
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="timeSlot" class="form-label">Zeitfenster</label>
-                            <select class="form-control" id="timeSlot" name="timeSlot" required>
+                            <select class="form-select" id="timeSlot" name="timeSlot" required>
                                 <option value="">Bitte wählen...</option>
-                                <option value="morning">Vormittags (10-13 Uhr)</option>
-                                <option value="afternoon">Nachmittags (14-17 Uhr)</option>
-                                <option value="evening">Abends (17-20 Uhr)</option>
+                                <option value="morning">Vormittag (9:00 - 12:00)</option>
+                                <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
+                                <option value="evening">Abend (17:00 - 20:00)</option>
                             </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Schritt 3: Bestätigung -->
-                    <div class="wizard-step" data-step="3">
-                        <h6 class="mb-4">Bestätigung</h6>
-                        <div class="confirmation-details">
-                            <p class="mb-2">Bitte überprüfen Sie Ihre Eingaben:</p>
-                            <div id="summaryDetails" class="p-3 bg-light rounded">
-                                <!-- Wird dynamisch gefüllt -->
+                            <div class="invalid-feedback">
+                                Bitte wählen Sie ein Zeitfenster aus.
                             </div>
+                        </div>
+                        <div class="d-flex justify-content-between gap-2">
+                            <button type="button" class="btn btn-secondary btn-prev">Zurück</button>
+                            <button type="button" class="btn btn-primary btn-next">Weiter</button>
                         </div>
                     </div>
 
-                    <!-- Navigation -->
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Zurück</button>
-                        <button type="button" class="btn btn-primary" id="nextBtn">Weiter</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">
-                            Reservierung bestätigen
-                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                        </button>
+                    <!-- Schritt 3: Bestätigung -->
+                    <div class="wizard-step">
+                        <h6 class="mb-4">Überprüfen Sie Ihre Angaben</h6>
+                        <div class="confirmation-details">
+                            <p><strong>Name:</strong> <span id="confirmName"></span></p>
+                            <p><strong>E-Mail:</strong> <span id="confirmEmail"></span></p>
+                            <p><strong>Telefon:</strong> <span id="confirmPhone"></span></p>
+                            <p><strong>Datum:</strong> <span id="confirmDate"></span></p>
+                            <p><strong>Zeitfenster:</strong> <span id="confirmTimeSlot"></span></p>
+                        </div>
+                        <div class="d-flex justify-content-between gap-2 mt-4">
+                            <button type="button" class="btn btn-secondary btn-prev">Zurück</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                Registrierung abschließen
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1286,217 +1302,54 @@
     </div>
 </div>
 
-<!-- Mobile Header -->
-<div class="mobile-header">
-    <h5 class="mb-0">{{ route.street }}</h5>
-    <button class="btn btn-sm btn-outline-primary" onclick="toggleMiniMap()">
-        <i class="fas fa-map"></i>
-    </button>
-</div>
-
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav">
-    <a href="#info" class="mobile-nav-item active">
-        <i class="fas fa-info-circle"></i>
-        Info
-    </a>
-    <a href="#map" class="mobile-nav-item">
-        <i class="fas fa-map-marker-alt"></i>
-        Karte
-    </a>
-    <a href="#registrations" class="mobile-nav-item">
-        <i class="fas fa-calendar-alt"></i>
-        Termine
-    </a>
-    <button class="mobile-nav-item" data-bs-toggle="modal" data-bs-target="#registrationModal">
-        <i class="fas fa-plus-circle"></i>
-        Reservieren
-    </button>
-</div>
-
-<!-- Mini-Karte -->
-<div class="mini-map" id="miniMap">
-    <div id="miniMapContent" style="width: 100%; height: 100%;"></div>
-    <button class="mini-map-close" onclick="toggleMiniMap()">
-        <i class="fas fa-times"></i>
-    </button>
-</div>
-
-<!-- Ersetze die bestehenden Statistik-Karten -->
-<div class="stats-carousel">
-    <div class="stat-card">
-        <div class="stat-ring">
-            <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" class="stat-ring-circle" 
-                        style="stroke-dasharray: 251.2; stroke-dashoffset: {{ 251.2 - (251.2 * route.mobilization_index/3) }}">
-                </circle>
-            </svg>
-            <div class="stat-ring-text">{{ route.mobilization_index }}/3</div>
+<!-- Toast Benachrichtigung -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Hinweis</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Schließen"></button>
         </div>
-        <h3>Mobilisierung</h3>
+        <div class="toast-body"></div>
     </div>
-    <div class="stat-card">
-        <div class="stat-ring">
-            <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" class="stat-ring-circle"
-                        style="stroke-dasharray: 251.2; stroke-dashoffset: {{ 251.2 - (251.2 * route.conviction_index/3) }}">
-                </circle>
-            </svg>
-            <div class="stat-ring-text">{{ route.conviction_index }}/3</div>
-        </div>
-        <h3>Überzeugung</h3>
-    </div>
-    {% if route.households %}
-    <div class="stat-card">
-        <div class="stat-ring">
-            <div class="stat-ring-text">{{ route.households }}</div>
-        </div>
-        <h3>Haushalte</h3>
-    </div>
-    {% endif %}
-    {% if route.rental_percentage %}
-    <div class="stat-card">
-        <div class="stat-ring">
-            <div class="stat-ring-text">{{ "%.0f"|format(route.rental_percentage) }}%</div>
-        </div>
-        <h3>Mietquote</h3>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Horizontale Timeline für Mobile -->
-<div class="timeline-horizontal">
-    {% for reg in registrations|sort(attribute='date') %}
-    <div class="timeline-item-horizontal">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="mb-1">{{ reg.date.strftime('%d.%m.%Y') }}</h6>
-                    <span class="badge {% if reg.status == 'geplant' %}bg-warning{% elif reg.status == 'abgeschlossen' %}bg-success{% else %}bg-danger{% endif %}">
-                        {{ reg.status }}
-                    </span>
-                </div>
-                <p class="mb-1"><i class="far fa-clock"></i> {{ reg.time_slot }}</p>
-                <p class="mb-0"><i class="far fa-user"></i> {{ reg.volunteer.name }}</p>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
 </div>
 
 <script>
-    // Konstanten
-    const MAP_DEFAULT_LAT = 51.4512;
-    const MAP_DEFAULT_LON = 6.6382;
-    const TOAST_DURATION = 5000;
-    const FORM_SUBMISSION_DELAY = 300;
-
-    // Map Variablen
+    // Globale Variablen
     let map;
     let directionsService;
     let directionsRenderer;
-    let registrationModal;
-    let notificationToast;
+    let currentStep = 1;
+    const totalSteps = 3;
 
-    // Event Listener für DOM-Laden
+    // DOM Content Loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Entferne alle existierenden Modal-Backdrops
-        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-        existingBackdrops.forEach(backdrop => backdrop.remove());
-        
-        // Entferne modal-open Klasse vom Body
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = 'auto';
-        document.body.style.paddingRight = '0';
-
-        // Stelle sicher, dass das Modal geschlossen ist
-        const modalElement = document.getElementById('registrationModal');
-        if (modalElement) {
-            modalElement.classList.remove('show');
-            modalElement.style.display = 'none';
-        }
-
-        // Initialisiere Komponenten
-        initializeComponents();
-        setupEventListeners();
+        setupFormHandlers();
         initializeWizard();
-    }, { passive: true });
+        initMap();
+    });
 
-    // Komponenten initialisieren
-    function initializeComponents() {
-        // Modal initialisieren
-        const modalElement = document.getElementById('registrationModal');
-        if (modalElement) {
-            // Entferne existierende Event Listener
-            const newModal = modalElement.cloneNode(true);
-            modalElement.parentNode.replaceChild(newModal, modalElement);
-            
-            // Initialisiere Modal neu
-            registrationModal = new bootstrap.Modal(newModal, {
-                backdrop: 'static',
-                keyboard: true,
-                focus: true
-            });
-
-            // Füge Event Listener für Modal-Events hinzu
-            newModal.addEventListener('hidden.bs.modal', function () {
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = 'auto';
-                document.body.style.paddingRight = '0';
-            });
-        }
-
-        // Toast initialisieren
-        const toastElement = document.getElementById('notificationToast');
-        if (toastElement) {
-            notificationToast = new bootstrap.Toast(toastElement, {
-                autohide: true,
-                delay: TOAST_DURATION
-            });
-        }
-    }
-
-    // Event Listener einrichten
-    function setupEventListeners() {
-        // Form-Handler
+    // Form Handler Setup
+    function setupFormHandlers() {
         const form = document.getElementById('registrationForm');
+        const nextButtons = document.querySelectorAll('.btn-next');
+        const prevButtons = document.querySelectorAll('.btn-prev');
+        const inputs = document.querySelectorAll('input[required], select[required]');
+
         if (form) {
             form.addEventListener('submit', handleRegistration);
         }
 
-        // Input Validation
-        const inputs = document.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.addEventListener('input', () => validateInput(input), { passive: true });
+        nextButtons.forEach(button => {
+            button.addEventListener('click', nextStep);
         });
 
-        // Wizard Navigation
-        const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn) {
-            nextBtn.addEventListener('click', nextStep);
-        }
+        prevButtons.forEach(button => {
+            button.addEventListener('click', previousStep);
+        });
 
-        const prevBtn = document.getElementById('prevBtn');
-        if (prevBtn) {
-            prevBtn.addEventListener('click', previousStep);
-        }
-
-        // Map Controls
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', () => {
-                const mapContainer = document.getElementById('mapContainer');
-                if (mapContainer) {
-                    mapContainer.classList.toggle('map-fullscreen');
-                    const icon = fullscreenBtn.querySelector('i');
-                    icon.classList.toggle('fa-expand');
-                    icon.classList.toggle('fa-compress');
-                    google.maps.event.trigger(map, 'resize');
-                }
-            });
-        }
+        inputs.forEach(input => {
+            input.addEventListener('input', () => validateInput(input));
+        });
     }
 
     // Wizard initialisieren
@@ -1510,6 +1363,7 @@
                     step.classList.remove('active');
                 }
             });
+            updateProgressBar();
         }
     }
 
@@ -1522,6 +1376,7 @@
                 currentStep.classList.remove('active');
                 nextStep.classList.add('active');
                 updateProgressBar();
+                updateConfirmationStep();
             }
         }
     }
@@ -1536,6 +1391,19 @@
                 prevStep.classList.add('active');
                 updateProgressBar();
             }
+        }
+    }
+
+    // Bestätigungsschritt aktualisieren
+    function updateConfirmationStep() {
+        const lastStep = document.querySelector('.wizard-step:last-child');
+        if (lastStep && lastStep.classList.contains('active')) {
+            document.getElementById('confirmName').textContent = document.getElementById('name').value;
+            document.getElementById('confirmEmail').textContent = document.getElementById('email').value;
+            document.getElementById('confirmPhone').textContent = document.getElementById('phone').value;
+            document.getElementById('confirmDate').textContent = document.getElementById('date').value;
+            const timeSlot = document.getElementById('timeSlot');
+            document.getElementById('confirmTimeSlot').textContent = timeSlot.options[timeSlot.selectedIndex].text;
         }
     }
 
@@ -1581,55 +1449,6 @@
         }
     }
 
-    // Registrierungs-Handler
-    async function handleRegistration(event) {
-        event.preventDefault();
-        
-        if (!validateForm(event.target)) {
-            return;
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const spinner = submitButton.querySelector('.spinner-border');
-        
-        try {
-            submitButton.disabled = true;
-            spinner.classList.remove('d-none');
-
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                route_id: {{ route.id }},
-                date: document.getElementById('date').value,
-                time_slot: document.getElementById('timeSlot').value
-            };
-
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showNotification('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
-                setTimeout(() => window.location.reload(), FORM_SUBMISSION_DELAY);
-            } else {
-                showNotification(data.error || 'Ein Fehler ist aufgetreten.', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.', 'error');
-        } finally {
-            submitButton.disabled = false;
-            spinner.classList.add('d-none');
-        }
-    }
-
     // Form Validierung
     function validateForm(form) {
         const inputs = form.querySelectorAll('input[required], select[required]');
@@ -1643,6 +1462,60 @@
         return isValid;
     }
 
+    // Registrierungs-Handler
+    async function handleRegistration(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        if (!validateForm(form)) {
+            return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const spinner = submitButton.querySelector('.spinner-border');
+        
+        try {
+            submitButton.disabled = true;
+            if (spinner) {
+                spinner.classList.remove('d-none');
+            }
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                route_id: {{ route.id }},
+                date: document.getElementById('date').value,
+                time_slot: document.getElementById('timeSlot').value
+            };
+
+            const response = await fetch('/api/register_volunteer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showNotification(data.error || 'Ein Fehler ist aufgetreten.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            if (spinner) {
+                spinner.classList.add('d-none');
+            }
+        }
+    }
+
     // Toast Benachrichtigung anzeigen
     function showNotification(message, type = 'success') {
         const toast = document.getElementById('notificationToast');
@@ -1650,7 +1523,8 @@
         toastBody.textContent = message;
         toast.classList.remove('bg-success', 'bg-danger');
         toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        notificationToast.show();
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
     }
 
     // Map initialisieren
@@ -1829,120 +1703,6 @@
         zoomOutBtn.addEventListener('click', () => {
             map.setZoom(map.getZoom() - 1);
         });
-    }
-
-    // Mini-Karte Toggle
-    let miniMap;
-    let isMiniMapVisible = false;
-
-    function toggleMiniMap() {
-        const miniMapElement = document.getElementById('miniMap');
-        if (!isMiniMapVisible) {
-            miniMapElement.style.display = 'block';
-            if (!miniMap) {
-                initMiniMap();
-            }
-            isMiniMapVisible = true;
-        } else {
-            miniMapElement.style.display = 'none';
-            isMiniMapVisible = false;
-        }
-    }
-
-    function initMiniMap() {
-        const center = {
-            lat: {{ route.lat|default(MAP_DEFAULT_LAT) }},
-            lng: {{ route.lon|default(MAP_DEFAULT_LON) }}
-        };
-        
-        miniMap = new google.maps.Map(document.getElementById('miniMapContent'), {
-            zoom: 14,
-            center: center,
-            disableDefaultUI: true,
-            gestureHandling: 'none'
-        });
-        
-        new google.maps.Marker({
-            position: center,
-            map: miniMap,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "#E3000F",
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#ffffff"
-            }
-        });
-    }
-
-    // Mobile Navigation
-    document.querySelectorAll('.mobile-nav-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (!this.hasAttribute('data-bs-toggle')) {
-                e.preventDefault();
-                document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                const target = this.getAttribute('href').substring(1);
-                document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-
-    // Scroll Handler für Mini-Karte
-    let lastScrollTop = 0;
-    window.addEventListener('scroll', () => {
-        const st = window.pageYOffset || document.documentElement.scrollTop;
-        const mapContainer = document.getElementById('mapContainer');
-        const mapRect = mapContainer.getBoundingClientRect();
-        
-        if (mapRect.bottom < 0 && st > lastScrollTop) {
-            document.getElementById('miniMap').style.display = 'block';
-        } else {
-            document.getElementById('miniMap').style.display = 'none';
-        }
-        lastScrollTop = st <= 0 ? 0 : st;
-    });
-
-    // Touch Event Handler
-    function handleTouchStart(e) {
-        // Touch-Handling ohne preventDefault
-    }
-
-    function handleTouchMove(e) {
-        // Touch-Handling ohne preventDefault
-    }
-
-    function handleWheel(e) {
-        // Wheel-Handling ohne preventDefault
-    }
-
-    // Touch Events für Karte
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    document.querySelector('.map-container').addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-
-    document.querySelector('.map-container').addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-
-    function handleSwipe() {
-        const swipeThreshold = 50;
-        const diff = touchEndX - touchStartX;
-        
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0) {
-                // Swipe right - Zoom out
-                map.setZoom(map.getZoom() - 1);
-            } else {
-                // Swipe left - Zoom in
-                map.setZoom(map.getZoom() + 1);
-            }
-        }
     }
 </script>
 {% endblock %} 
