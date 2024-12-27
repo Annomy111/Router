@@ -28,6 +28,16 @@ def downgrade():
             '''))
             conn.commit()
 
+def up():
+    try:
+        db.session.execute(text("""
+            ALTER TABLE route ADD COLUMN max_volunteers INTEGER DEFAULT 2;
+        """))
+        db.session.commit()
+        print("Max Volunteers Migration erfolgreich")
+    except:
+        print("Max Volunteers Spalte existiert bereits")
+
 if __name__ == '__main__':
     try:
         upgrade()

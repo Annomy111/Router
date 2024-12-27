@@ -3,27 +3,29 @@ from models import db, Route
 from sqlalchemy import text
 
 def upgrade():
-    # Füge neue Spalten hinzu
-    with current_app.app_context():
-        with db.engine.connect() as conn:
-            conn.execute(text('''
-                ALTER TABLE route 
-                ADD COLUMN IF NOT EXISTS meeting_point VARCHAR(500),
-                ADD COLUMN IF NOT EXISTS meeting_point_lat FLOAT,
-                ADD COLUMN IF NOT EXISTS meeting_point_lon FLOAT
-            '''))
-            conn.commit()
+    try:
+        db.session.execute(text("""
+            ALTER TABLE route ADD COLUMN meeting_point VARCHAR(500);
+        """))
+    except:
+        pass
         
-        # Aktualisiere bestehende Routen mit Treffpunkten
-        routes = Route.query.all()
-        for route in routes:
-            # Setze Standard-Treffpunkt am Anfang der Straße
-            house_start = route.house_numbers.split('-')[0]
-            route.meeting_point = f"Vor {route.street} {house_start}"
-            route.meeting_point_lat = route.lat
-            route.meeting_point_lon = route.lon
+    try:
+        db.session.execute(text("""
+            ALTER TABLE route ADD COLUMN meeting_point_lat FLOAT;
+        """))
+    except:
+        pass
         
-        db.session.commit()
+    try:
+        db.session.execute(text("""
+            ALTER TABLE route ADD COLUMN meeting_point_lon FLOAT;
+        """))
+    except:
+        pass
+        
+    db.session.commit()
+    print("Meeting Point Migration erfolgreich")
 
 def downgrade():
     # Entferne die Spalten wieder
