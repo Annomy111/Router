@@ -1,9 +1,144 @@
-from app import app, db, User, Route
+from app import app, db, User, Route, Volunteer, RouteRegistration
 from migrations.add_meeting_point import upgrade as upgrade_meeting_point
 from migrations.add_max_volunteers import upgrade as upgrade_max_volunteers
+import json
+from datetime import datetime
+import os
+
+def backup_data():
+    """Erstellt ein Backup der wichtigen Daten"""
+    with app.app_context():
+        try:
+            backup = {
+                'routes': [],
+                'volunteers': [],
+                'registrations': []
+            }
+            
+            # Backup Routen
+            routes = Route.query.all()
+            for route in routes:
+                route_data = {
+                    'city': route.city,
+                    'street': route.street,
+                    'house_numbers': route.house_numbers,
+                    'zip_code': route.zip_code,
+                    'mobilization_index': route.mobilization_index,
+                    'conviction_index': route.conviction_index,
+                    'households': route.households,
+                    'rental_percentage': route.rental_percentage,
+                    'lat': route.lat,
+                    'lon': route.lon,
+                    'meeting_point': route.meeting_point,
+                    'meeting_point_lat': route.meeting_point_lat,
+                    'meeting_point_lon': route.meeting_point_lon,
+                    'max_volunteers': route.max_volunteers,
+                    'is_active': route.is_active,
+                    'needs_review': route.needs_review
+                }
+                backup['routes'].append(route_data)
+            
+            # Backup Freiwillige
+            volunteers = Volunteer.query.all()
+            for volunteer in volunteers:
+                volunteer_data = {
+                    'name': volunteer.name,
+                    'email': volunteer.email,
+                    'phone': volunteer.phone
+                }
+                backup['volunteers'].append(volunteer_data)
+            
+            # Backup Registrierungen
+            registrations = RouteRegistration.query.all()
+            for reg in registrations:
+                reg_data = {
+                    'volunteer_email': reg.volunteer.email,  # Referenz über E-Mail
+                    'route_identifier': f"{reg.route.street}_{reg.route.house_numbers}",  # Eindeutige Route-ID
+                    'date': reg.date.strftime('%Y-%m-%d'),
+                    'time_slot': reg.time_slot,
+                    'status': reg.status
+                }
+                backup['registrations'].append(reg_data)
+            
+            # Speichere Backup
+            backup_file = 'data_backup.json'
+            with open(backup_file, 'w') as f:
+                json.dump(backup, f, indent=2)
+            print(f"Backup erstellt: {len(backup['routes'])} Routen, {len(backup['volunteers'])} Freiwillige, {len(backup['registrations'])} Registrierungen")
+            
+        except Exception as e:
+            print(f"Fehler beim Backup: {str(e)}")
+
+def restore_data():
+    """Stellt Daten aus dem Backup wieder her"""
+    backup_file = 'data_backup.json'
+    if not os.path.exists(backup_file):
+        print("Kein Backup gefunden")
+        return
+    
+    with app.app_context():
+        try:
+            with open(backup_file, 'r') as f:
+                backup = json.load(f)
+            
+            # Stelle Routen wieder her
+            for route_data in backup['routes']:
+                existing_route = Route.query.filter_by(
+                    street=route_data['street'],
+                    house_numbers=route_data['house_numbers']
+                ).first()
+                
+                if not existing_route:
+                    route = Route(**route_data)
+                    db.session.add(route)
+            
+            # Stelle Freiwillige wieder her
+            for volunteer_data in backup['volunteers']:
+                existing_volunteer = Volunteer.query.filter_by(
+                    email=volunteer_data['email']
+                ).first()
+                
+                if not existing_volunteer:
+                    volunteer = Volunteer(**volunteer_data)
+                    db.session.add(volunteer)
+            
+            # Stelle Registrierungen wieder her
+            for reg_data in backup['registrations']:
+                # Finde zugehörigen Freiwilligen und Route
+                volunteer = Volunteer.query.filter_by(email=reg_data['volunteer_email']).first()
+                street, house_numbers = reg_data['route_identifier'].split('_')
+                route = Route.query.filter_by(street=street, house_numbers=house_numbers).first()
+                
+                if volunteer and route:
+                    existing_registration = RouteRegistration.query.filter_by(
+                        volunteer_id=volunteer.id,
+                        route_id=route.id,
+                        date=datetime.strptime(reg_data['date'], '%Y-%m-%d').date(),
+                        time_slot=reg_data['time_slot']
+                    ).first()
+                    
+                    if not existing_registration:
+                        registration = RouteRegistration(
+                            volunteer_id=volunteer.id,
+                            route_id=route.id,
+                            date=datetime.strptime(reg_data['date'], '%Y-%m-%d').date(),
+                            time_slot=reg_data['time_slot'],
+                            status=reg_data['status']
+                        )
+                        db.session.add(registration)
+            
+            db.session.commit()
+            print("Backup erfolgreich wiederhergestellt")
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Fehler bei der Wiederherstellung: {str(e)}")
 
 def init_db():
     with app.app_context():
+        print("Versuche Backup wiederherzustellen...")
+        restore_data()
+        
         # Erstelle alle Tabellen
         db.create_all()
         print("Tabellen wurden erstellt")
@@ -84,7 +219,9 @@ def init_db():
         # Füge neue Routen um Südwall 38 hinzu
         add_routes()
         
-        print("Datenbankinitialisierung abgeschlossen")
+        # Erstelle Backup der aktuellen Daten
+        print("Erstelle Backup...")
+        backup_data()
 
 def add_routes():
     with app.app_context():
