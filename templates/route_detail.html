@@ -226,20 +226,22 @@
 
     /* Modal Styles */
     .modal-backdrop {
-        background-color: rgba(0, 0, 0, 0.5) !important;
+        display: none;
+    }
+
+    .modal-backdrop.show {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.5);
         z-index: 1040;
     }
 
     .modal {
+        display: none;
         z-index: 1050;
     }
 
-    .modal.fade {
-        display: none;
-    }
-
     .modal.show {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
     }
@@ -855,6 +857,29 @@
         position: relative;
         z-index: 2;
     }
+
+    /* Ensure content is always visible */
+    .container {
+        position: relative;
+        z-index: 10;
+        background: white;
+    }
+
+    .card {
+        position: relative;
+        z-index: 10;
+        background: white;
+    }
+
+    /* Remove any remaining overlays */
+    body::before {
+        display: none !important;
+    }
+
+    body.modal-open {
+        overflow: auto !important;
+        padding-right: 0 !important;
+    }
 </style>
 {% endblock %}
 
@@ -1249,16 +1274,20 @@
 
     // Event Listener für DOM-Laden
     document.addEventListener('DOMContentLoaded', function() {
+        // Entferne alle existierenden Modal-Backdrops
+        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+        existingBackdrops.forEach(backdrop => backdrop.remove());
+        
+        // Entferne modal-open Klasse vom Body
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
+
         // Stelle sicher, dass das Modal geschlossen ist
         const modalElement = document.getElementById('registrationModal');
         if (modalElement) {
             modalElement.classList.remove('show');
             modalElement.style.display = 'none';
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
         }
 
         // Initialisiere Komponenten
@@ -1272,10 +1301,24 @@
         // Modal initialisieren
         const modalElement = document.getElementById('registrationModal');
         if (modalElement) {
-            registrationModal = new bootstrap.Modal(modalElement, {
-                backdrop: true,
+            // Entferne existierende Event Listener
+            const newModal = modalElement.cloneNode(true);
+            modalElement.parentNode.replaceChild(newModal, modalElement);
+            
+            // Initialisiere Modal neu
+            registrationModal = new bootstrap.Modal(newModal, {
+                backdrop: 'static',
                 keyboard: true,
                 focus: true
+            });
+
+            // Füge Event Listener für Modal-Events hinzu
+            newModal.addEventListener('hidden.bs.modal', function () {
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = 'auto';
+                document.body.style.paddingRight = '0';
             });
         }
 
