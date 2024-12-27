@@ -223,19 +223,17 @@
 
     /* Modal Styles */
     .modal-backdrop {
-        display: none !important;
+        opacity: 0.5 !important;
+        display: block !important;
     }
 
     .modal {
-        background: none !important;
-    }
-
-    .modal-dialog {
-        margin: 1.75rem auto;
+        background: rgba(0, 0, 0, 0.5) !important;
     }
 
     .modal-content {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border-radius: 12px;
+        border: none;
     }
 
     /* Index Styles */
@@ -658,6 +656,23 @@
         .stats-carousel {
             display: flex;
         }
+
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+
+        .wizard-progress {
+            padding: 0 1rem;
+        }
+
+        .date-picker {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+
+        .time-slot-picker {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        }
     }
 </style>
 {% endblock %}
@@ -856,7 +871,7 @@
 
 <!-- Registrierungs-Modal -->
 <div class="modal" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="registrationModalLabel">Route reservieren</h5>
