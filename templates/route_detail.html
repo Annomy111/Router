@@ -223,17 +223,17 @@
 
     /* Modal Styles */
     .modal-backdrop {
-        opacity: 0.5 !important;
-        display: block !important;
+        display: none !important;
     }
 
     .modal {
-        background: rgba(0, 0, 0, 0.5) !important;
+        background: transparent !important;
     }
 
     .modal-content {
         border-radius: 12px;
         border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
     /* Index Styles */
@@ -870,7 +870,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true" data-bs-backdrop="true">
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -1075,20 +1075,16 @@
 
     // Komponenten initialisieren
     function initializeComponents() {
-        // Modal ohne statische Optionen initialisieren
+        // Modal ohne Backdrop initialisieren
         const modalElement = document.getElementById('registrationModal');
         registrationModal = new bootstrap.Modal(modalElement, {
-            backdrop: true,
+            backdrop: false,
             keyboard: true
         });
 
         // Event-Listener für Modal-Schließen
         modalElement.addEventListener('hidden.bs.modal', function () {
             document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
         });
