@@ -870,7 +870,7 @@
 </div>
 
 <!-- Registrierungs-Modal -->
-<div class="modal" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true" data-bs-backdrop="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -1078,7 +1078,7 @@
         // Modal ohne statische Optionen initialisieren
         const modalElement = document.getElementById('registrationModal');
         registrationModal = new bootstrap.Modal(modalElement, {
-            backdrop: false,
+            backdrop: true,
             keyboard: true
         });
 
