@@ -22,23 +22,27 @@ class Route(db.Model):
     __tablename__ = 'route'
     id = db.Column(db.Integer, primary_key=True)
     city = db.Column(db.String(100), nullable=False)
-    zip_code = db.Column(db.String(5), nullable=True)
+    zip_code = db.Column(db.String(5))
     street = db.Column(db.String(100), nullable=False)
-    house_numbers = db.Column(db.String(50), nullable=False)
-    mobilization_index = db.Column(db.Float, nullable=False)
-    conviction_index = db.Column(db.Float, nullable=False)
-    households = db.Column(db.Integer, nullable=True)
-    rental_percentage = db.Column(db.Float, nullable=True)
-    lat = db.Column(db.Float, nullable=False)
-    lon = db.Column(db.Float, nullable=False)
-    meeting_point = db.Column(db.String(200), nullable=True)
-    meeting_point_lat = db.Column(db.Float, nullable=True)
-    meeting_point_lon = db.Column(db.Float, nullable=True)
+    house_numbers = db.Column(db.String(100), nullable=False)
+    district = db.Column(db.String(100))
+    mobilization_index = db.Column(db.Integer)
+    conviction_index = db.Column(db.Integer)
+    households = db.Column(db.Integer)
+    rental_percentage = db.Column(db.Float)
+    lat = db.Column(db.Float)
+    lon = db.Column(db.Float)
+    meeting_point = db.Column(db.String(200))
+    meeting_point_lat = db.Column(db.Float)
+    meeting_point_lon = db.Column(db.Float)
     registrations = db.relationship('RouteRegistration', backref='route', lazy=True)
     max_volunteers = db.Column(db.Integer, default=4)
     is_active = db.Column(db.Boolean, default=True)
     path_coordinates = db.Column(db.JSON, nullable=True)
     needs_review = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f'<Route {self.city} {self.street} {self.house_numbers}>'
 
     def get_registration_stats(self):
         """Berechnet Statistiken für die Routenregistrierungen"""
