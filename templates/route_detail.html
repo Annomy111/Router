@@ -125,16 +125,16 @@
 
 <script>
 // Google Maps Initialisierung
-async function initMap() {
+function initMap() {
     // Koordinaten aus der Route
     const routeLocation = {
-        lat: {{ route.lat }},
-        lng: {{ route.lon }}
+        lat: Number('{{ route.lat }}'),
+        lng: Number('{{ route.lon }}')
     };
     
     const meetingPoint = {
-        lat: {{ route.meeting_point_lat }},
-        lng: {{ route.meeting_point_lon }}
+        lat: Number('{{ route.meeting_point_lat }}'),
+        lng: Number('{{ route.meeting_point_lon }}')
     };
 
     // Karte initialisieren
@@ -152,7 +152,12 @@ async function initMap() {
         map: map,
         title: '{{ route.street }} {{ route.house_numbers }}',
         icon: {
-            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#E3000F',
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#FFFFFF'
         }
     });
 
@@ -162,7 +167,12 @@ async function initMap() {
         map: map,
         title: '{{ route.meeting_point }}',
         icon: {
-            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#4285F4',
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#FFFFFF'
         }
     });
 

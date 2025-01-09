@@ -1387,7 +1387,7 @@ def add_security_headers(response):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://maps.googleapis.com https://cdnjs.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
-            "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; "
+            "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com https://maps.google.com; "
             "connect-src 'self' https://*.googleapis.com; "
             "frame-src 'self' https://calendar.google.com https://*.google.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
