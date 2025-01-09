@@ -1110,11 +1110,10 @@ def get_routes():
 def route_detail(route_id):
     route = Route.query.get_or_404(route_id)
     registrations = RouteRegistration.query.filter_by(route_id=route_id).all()
-    mapbox_token = app.config['MAPBOX_TOKEN']
     return render_template('route_detail.html', 
                          route=route, 
                          registrations=registrations,
-                         google_maps_key=app.config['GOOGLE_MAPS_KEY'])
+                         config=app.config)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
