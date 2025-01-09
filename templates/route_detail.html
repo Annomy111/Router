@@ -104,56 +104,64 @@
 </div>
 
 <script>
+// Lade Bootstrap Modal direkt
+const registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'));
+
 async function initMap() {
-    const geocoder = new google.maps.Geocoder();
-    const bounds = new google.maps.LatLngBounds();
-    
-    // Karte initialisieren
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
+        center: {lat: {{ route.lat }}, lng: {{ route.lon }}},
         mapTypeControl: false,
         streetViewControl: true,
         fullscreenControl: true
     });
 
-    // Adressen für Start und Ende
+    // Start-Position
     const startAddress = `{{ route.street }} {{ route.house_numbers.split('-')[0] }}, {{ route.zip_code }} {{ route.city }}`;
     const endAddress = `{{ route.street }} {{ route.house_numbers.split('-')[1] }}, {{ route.zip_code }} {{ route.city }}`;
     
+    const geocoder = new google.maps.Geocoder();
+    
     try {
-        // Start-Position
+        // Start-Marker
         const startResult = await geocoder.geocode({ address: startAddress });
         const startLocation = startResult.results[0].geometry.location;
         
-        // End-Position
+        new google.maps.Marker({
+            position: startLocation,
+            map: map,
+            title: startAddress,
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            }
+        });
+
+        // End-Marker
         const endResult = await geocoder.geocode({ address: endAddress });
         const endLocation = endResult.results[0].geometry.location;
         
-        // Treffpunkt
-        const meetingPoint = new google.maps.LatLng({{ route.meeting_point_lat }}, {{ route.meeting_point_lon }});
-        
-        // Marker für Start
-        new google.maps.marker.AdvancedMarkerElement({
-            map,
-            position: startLocation,
-            title: startAddress,
-            content: createMarkerContent('Start')
-        });
-
-        // Marker für Ende
-        new google.maps.marker.AdvancedMarkerElement({
-            map,
+        new google.maps.Marker({
             position: endLocation,
+            map: map,
             title: endAddress,
-            content: createMarkerContent('Ende')
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            }
         });
 
-        // Marker für Treffpunkt
-        new google.maps.marker.AdvancedMarkerElement({
-            map,
+        // Treffpunkt-Marker
+        const meetingPoint = new google.maps.LatLng(
+            {{ route.meeting_point_lat }}, 
+            {{ route.meeting_point_lon }}
+        );
+        
+        new google.maps.Marker({
             position: meetingPoint,
+            map: map,
             title: '{{ route.meeting_point }}',
-            content: createMarkerContent('Treffpunkt')
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            }
         });
 
         // Route zeichnen
@@ -166,7 +174,8 @@ async function initMap() {
         });
         routePath.setMap(map);
 
-        // Bounds erweitern und Karte zentrieren
+        // Karte auf alle Marker zentrieren
+        const bounds = new google.maps.LatLngBounds();
         bounds.extend(startLocation);
         bounds.extend(endLocation);
         bounds.extend(meetingPoint);
@@ -174,28 +183,25 @@ async function initMap() {
         
     } catch (error) {
         console.error('Geocoding error:', error);
+        // Fallback: Zeige zumindest den Treffpunkt
+        const meetingPoint = new google.maps.LatLng(
+            {{ route.meeting_point_lat }}, 
+            {{ route.meeting_point_lon }}
+        );
+        map.setCenter(meetingPoint);
+        new google.maps.Marker({
+            position: meetingPoint,
+            map: map,
+            title: '{{ route.meeting_point }}',
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            }
+        });
     }
 }
 
-function createMarkerContent(type) {
-    const color = type === 'Treffpunkt' ? '#4285F4' : '#E3000F';
-    const element = document.createElement('div');
-    element.innerHTML = `
-        <div style="background: ${color}; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
-            ${type}
-        </div>
-    `;
-    return element;
-}
-
-// Bootstrap Modal Initialisierung
+// Formular-Handling
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = new bootstrap.Modal(document.getElementById('registrationModal'), {
-        keyboard: true,
-        backdrop: true,
-        focus: true
-    });
-
     const form = document.getElementById('registrationForm');
     const submitButton = document.getElementById('submitButton');
 
@@ -235,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             if (result.success) {
-                modal.hide();
+                registrationModal.hide();
                 alert('Registrierung erfolgreich!');
                 window.location.reload();
             } else {
@@ -251,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&libraries=places,geometry&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
 
 <style>
 .info-box {
