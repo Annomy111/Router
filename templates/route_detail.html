@@ -63,22 +63,26 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm">
+                <form id="registrationForm" class="needs-validation" novalidate>
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="name" required>
+                        <div class="invalid-feedback">Bitte geben Sie Ihren Namen ein.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">E-Mail</label>
                         <input type="email" class="form-control" name="email" required>
+                        <div class="invalid-feedback">Bitte geben Sie eine gültige E-Mail-Adresse ein.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Telefon</label>
                         <input type="tel" class="form-control" name="phone" required>
+                        <div class="invalid-feedback">Bitte geben Sie Ihre Telefonnummer ein.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Datum</label>
-                        <input type="date" class="form-control" name="date" required>
+                        <input type="date" class="form-control" name="date" required min="{{ today }}">
+                        <div class="invalid-feedback">Bitte wählen Sie ein gültiges Datum.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Zeitfenster</label>
@@ -88,8 +92,11 @@
                             <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
                             <option value="evening">Abend (17:00 - 20:00)</option>
                         </select>
+                        <div class="invalid-feedback">Bitte wählen Sie ein Zeitfenster.</div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Registrierung abschließen</button>
+                    <button type="submit" class="btn btn-primary w-100" id="submitButton">
+                        Registrierung abschließen
+                    </button>
                 </form>
             </div>
         </div>
@@ -98,24 +105,58 @@
 
 <script>
 function initMap() {
+    const routeStart = {lat: {{ route.lat }}, lng: {{ route.lon }}};
+    const routeEnd = {
+        lat: {{ route.lat }} + ({{ route.house_numbers.split('-')[1] }} - {{ route.house_numbers.split('-')[0] }}) * 0.0001,
+        lng: {{ route.lon }}
+    };
+    const meetingPoint = {lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }}};
+    
     const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: {lat: {{ route.lat }}, lng: {{ route.lon }}},
+        zoom: 17,
+        center: routeStart,
         mapTypeControl: false,
         streetViewControl: true,
         fullscreenControl: true
     });
     
+    // Start-Marker (rotes Haus)
     new google.maps.Marker({
-        position: {lat: {{ route.lat }}, lng: {{ route.lon }}},
+        position: routeStart,
         map: map,
-        title: '{{ route.street }} {{ route.house_numbers }}'
+        title: '{{ route.street }} {{ route.house_numbers.split('-')[0] }}',
+        icon: {
+            path: 'M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z',
+            fillColor: '#E3000F',
+            fillOpacity: 1,
+            strokeWeight: 0,
+            rotation: 0,
+            scale: 2,
+            anchor: new google.maps.Point(15, 30),
+        }
+    });
+
+    // End-Marker (rotes Haus)
+    new google.maps.Marker({
+        position: routeEnd,
+        map: map,
+        title: '{{ route.street }} {{ route.house_numbers.split('-')[1] }}',
+        icon: {
+            path: 'M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z',
+            fillColor: '#E3000F',
+            fillOpacity: 1,
+            strokeWeight: 0,
+            rotation: 0,
+            scale: 2,
+            anchor: new google.maps.Point(15, 30),
+        }
     });
     
+    // Treffpunkt-Marker (roter Pfeil)
     new google.maps.Marker({
-        position: {lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }}},
+        position: meetingPoint,
         map: map,
-        title: 'Treffpunkt',
+        title: 'Treffpunkt: {{ route.meeting_point }}',
         icon: {
             path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
             scale: 6,
@@ -125,42 +166,77 @@ function initMap() {
             strokeColor: "#ffffff"
         }
     });
+
+    // Route zeichnen
+    const routePath = new google.maps.Polyline({
+        path: [routeStart, routeEnd],
+        geodesic: true,
+        strokeColor: '#E3000F',
+        strokeOpacity: 1.0,
+        strokeWeight: 3
+    });
+
+    routePath.setMap(map);
 }
 </script>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
 
 <script>
-document.getElementById('registrationForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const data = {
-        route_id: {{ route.id }},
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        date: formData.get('date'),
-        time_slot: formData.get('timeSlot')
-    };
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    const submitButton = document.getElementById('submitButton');
 
-    try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert('Registrierung erfolgreich!');
-            window.location.reload();
-        } else {
-            alert('Fehler: ' + result.error);
+    // Aktiviere Bootstrap Form Validation
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!form.checkValidity()) {
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
         }
-    } catch (error) {
-        alert('Fehler bei der Registrierung');
-    }
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Wird verarbeitet...';
+        
+        const formData = new FormData(this);
+        const data = {
+            route_id: {{ route.id }},
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            date: formData.get('date'),
+            time_slot: formData.get('timeSlot')
+        };
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Registrierung erfolgreich!');
+                window.location.reload();
+            } else {
+                alert('Fehler: ' + result.error);
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Registrierung abschließen';
+            }
+        } catch (error) {
+            alert('Fehler bei der Registrierung');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Registrierung abschließen';
+        }
+    });
+
+    // Setze das Mindestdatum auf heute
+    const dateInput = form.querySelector('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
 });
 </script>
 
