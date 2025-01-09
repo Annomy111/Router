@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#registrationModal">
+                    <button class="btn btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#registrationModal">
                         <i class="fas fa-user-plus"></i> Jetzt registrieren
                     </button>
                 </div>
@@ -55,38 +55,38 @@
 </div>
 
 <!-- Registrierungsformular -->
-<div class="modal fade" id="registrationModal" tabindex="-1">
+<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Als Freiwilliger registrieren</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="registrationModalLabel">Als Freiwilliger registrieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
                 <form id="registrationForm" class="needs-validation" novalidate>
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-control" name="name" required>
+                        <label class="form-label" for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
                         <div class="invalid-feedback">Bitte geben Sie Ihren Namen ein.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">E-Mail</label>
-                        <input type="email" class="form-control" name="email" required>
+                        <label class="form-label" for="email">E-Mail</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
                         <div class="invalid-feedback">Bitte geben Sie eine gültige E-Mail-Adresse ein.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Telefon</label>
-                        <input type="tel" class="form-control" name="phone" required>
+                        <label class="form-label" for="phone">Telefon</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" required>
                         <div class="invalid-feedback">Bitte geben Sie Ihre Telefonnummer ein.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Datum</label>
-                        <input type="date" class="form-control" name="date" required min="{{ today }}">
+                        <label class="form-label" for="date">Datum</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
                         <div class="invalid-feedback">Bitte wählen Sie ein gültiges Datum.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Zeitfenster</label>
-                        <select class="form-select" name="timeSlot" required>
+                        <label class="form-label" for="timeSlot">Zeitfenster</label>
+                        <select class="form-select" id="timeSlot" name="timeSlot" required>
                             <option value="">Bitte wählen...</option>
                             <option value="morning">Vormittag (9:00 - 12:00)</option>
                             <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
@@ -104,90 +104,106 @@
 </div>
 
 <script>
-function initMap() {
-    const routeStart = {lat: {{ route.lat }}, lng: {{ route.lon }}};
-    const routeEnd = {
-        lat: {{ route.lat }} + ({{ route.house_numbers.split('-')[1] }} - {{ route.house_numbers.split('-')[0] }}) * 0.0001,
-        lng: {{ route.lon }}
-    };
-    const meetingPoint = {lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }}};
+async function initMap() {
+    const geocoder = new google.maps.Geocoder();
+    const bounds = new google.maps.LatLngBounds();
     
+    // Karte initialisieren
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
-        center: routeStart,
         mapTypeControl: false,
         streetViewControl: true,
         fullscreenControl: true
     });
+
+    // Adressen für Start und Ende
+    const startAddress = `{{ route.street }} {{ route.house_numbers.split('-')[0] }}, {{ route.zip_code }} {{ route.city }}`;
+    const endAddress = `{{ route.street }} {{ route.house_numbers.split('-')[1] }}, {{ route.zip_code }} {{ route.city }}`;
     
-    // Start-Marker (rotes Haus)
-    new google.maps.Marker({
-        position: routeStart,
-        map: map,
-        title: '{{ route.street }} {{ route.house_numbers.split('-')[0] }}',
-        icon: {
-            path: 'M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z',
-            fillColor: '#E3000F',
-            fillOpacity: 1,
-            strokeWeight: 0,
-            rotation: 0,
-            scale: 2,
-            anchor: new google.maps.Point(15, 30),
-        }
-    });
+    try {
+        // Start-Position
+        const startResult = await geocoder.geocode({ address: startAddress });
+        const startLocation = startResult.results[0].geometry.location;
+        
+        // End-Position
+        const endResult = await geocoder.geocode({ address: endAddress });
+        const endLocation = endResult.results[0].geometry.location;
+        
+        // Treffpunkt
+        const meetingPoint = new google.maps.LatLng({{ route.meeting_point_lat }}, {{ route.meeting_point_lon }});
+        
+        // Marker für Start
+        new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: startLocation,
+            title: startAddress,
+            content: createMarkerContent('Start')
+        });
 
-    // End-Marker (rotes Haus)
-    new google.maps.Marker({
-        position: routeEnd,
-        map: map,
-        title: '{{ route.street }} {{ route.house_numbers.split('-')[1] }}',
-        icon: {
-            path: 'M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z',
-            fillColor: '#E3000F',
-            fillOpacity: 1,
-            strokeWeight: 0,
-            rotation: 0,
-            scale: 2,
-            anchor: new google.maps.Point(15, 30),
-        }
-    });
-    
-    // Treffpunkt-Marker (roter Pfeil)
-    new google.maps.Marker({
-        position: meetingPoint,
-        map: map,
-        title: 'Treffpunkt: {{ route.meeting_point }}',
-        icon: {
-            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: "#E3000F",
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: "#ffffff"
-        }
-    });
+        // Marker für Ende
+        new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: endLocation,
+            title: endAddress,
+            content: createMarkerContent('Ende')
+        });
 
-    // Route zeichnen
-    const routePath = new google.maps.Polyline({
-        path: [routeStart, routeEnd],
-        geodesic: true,
-        strokeColor: '#E3000F',
-        strokeOpacity: 1.0,
-        strokeWeight: 3
-    });
+        // Marker für Treffpunkt
+        new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: meetingPoint,
+            title: '{{ route.meeting_point }}',
+            content: createMarkerContent('Treffpunkt')
+        });
 
-    routePath.setMap(map);
+        // Route zeichnen
+        const routePath = new google.maps.Polyline({
+            path: [startLocation, endLocation],
+            geodesic: true,
+            strokeColor: '#E3000F',
+            strokeOpacity: 1.0,
+            strokeWeight: 3
+        });
+        routePath.setMap(map);
+
+        // Bounds erweitern und Karte zentrieren
+        bounds.extend(startLocation);
+        bounds.extend(endLocation);
+        bounds.extend(meetingPoint);
+        map.fitBounds(bounds);
+        
+    } catch (error) {
+        console.error('Geocoding error:', error);
+    }
 }
-</script>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
+function createMarkerContent(type) {
+    const color = type === 'Treffpunkt' ? '#4285F4' : '#E3000F';
+    const element = document.createElement('div');
+    element.innerHTML = `
+        <div style="background: ${color}; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
+            ${type}
+        </div>
+    `;
+    return element;
+}
 
-<script>
+// Bootstrap Modal Initialisierung
 document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('registrationModal'), {
+        keyboard: true,
+        backdrop: true,
+        focus: true
+    });
+
     const form = document.getElementById('registrationForm');
     const submitButton = document.getElementById('submitButton');
 
-    // Aktiviere Bootstrap Form Validation
+    // Setze das Mindestdatum auf heute
+    const dateInput = document.getElementById('date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -219,26 +235,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             if (result.success) {
+                modal.hide();
                 alert('Registrierung erfolgreich!');
                 window.location.reload();
             } else {
                 alert('Fehler: ' + result.error);
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Registrierung abschließen';
             }
         } catch (error) {
             alert('Fehler bei der Registrierung');
+        } finally {
             submitButton.disabled = false;
             submitButton.innerHTML = 'Registrierung abschließen';
         }
     });
-
-    // Setze das Mindestdatum auf heute
-    const dateInput = form.querySelector('input[type="date"]');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.min = today;
 });
 </script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&libraries=places,geometry&callback=initMap"></script>
 
 <style>
 .info-box {
