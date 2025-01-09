@@ -1,21 +1,25 @@
 services:
   - type: web
-    name: spd-wahlkampf
-    plan: starter
+    name: router-app
     runtime: python
-    region: frankfurt
-    buildCommand: pip install -r requirements.txt && python init_db.py
-    startCommand: gunicorn wsgi:app
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.18
-      - key: FLASK_APP
-        value: app.py
-      - key: FLASK_ENV
-        value: production
+        value: 3.11.0
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
       - key: MAIL_USERNAME
-        value: Dieter.Meier82@gmail.com
+        sync: false
       - key: MAIL_PASSWORD
-        value: kewm kjbk hrgh lrgd
+        sync: false
       - key: MAIL_DEFAULT_SENDER
-        value: Dieter.Meier82@gmail.com
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
