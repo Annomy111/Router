@@ -104,9 +104,7 @@
 </div>
 
 <script>
-// Lade Bootstrap Modal direkt
-const registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'));
-
+// Google Maps Initialisierung
 async function initMap() {
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
@@ -202,6 +200,17 @@ async function initMap() {
 
 // Formular-Handling
 document.addEventListener('DOMContentLoaded', function() {
+    // Bootstrap Modal initialisieren
+    const registrationModal = new bootstrap.Modal(document.getElementById('registrationModal'), {
+        keyboard: true,
+        backdrop: 'static'
+    });
+
+    // Button-Handler für Modal öffnen
+    document.querySelector('[data-bs-toggle="modal"]').addEventListener('click', function() {
+        registrationModal.show();
+    });
+
     const form = document.getElementById('registrationForm');
     const submitButton = document.getElementById('submitButton');
 
@@ -257,6 +266,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- Bootstrap Modal Script -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Google Maps Script -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
 
 <style>
