@@ -23,7 +23,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres.bzqlsaioxqrpcixvdnoo:toCjoz-mockys-gecze8@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 app.config['GOOGLE_MAPS_KEY'] = 'AIzaSyA80P6QZPiV5Z_dv3sSY9w3igF2XSIIgxA'
 
 # E-Mail-Konfiguration
@@ -1387,12 +1386,12 @@ def add_security_headers(response):
     if response.mimetype == 'text/html':
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.mapbox.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.mapbox.com; "
-            "img-src 'self' data: https://api.mapbox.com https://*.tiles.mapbox.com https://unpkg.com; "
-            "connect-src 'self' https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://maps.googleapis.com https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; "
+            "connect-src 'self' https://*.googleapis.com; "
             "frame-src 'self'; "
-            "font-src 'self' https://cdn.jsdelivr.net; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "object-src 'none';"
         )
     return response

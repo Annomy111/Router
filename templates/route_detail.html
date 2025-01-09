@@ -1,1206 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}{{ route.street }} - Details{% endblock %}
-
-{% block head %}
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Bootstrap JavaScript Bundle mit Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Google Maps JavaScript API - Lazy Loading -->
-<script>
-    // Lazy Load Google Maps
-    function loadGoogleMaps() {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places&callback=initMap`;
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-    }
-    // Load Maps when page is fully loaded
-    window.addEventListener('load', loadGoogleMaps);
-</script>
-
-<style>
-    /* SPD Brand Colors */
-    :root {
-        --spd-red: #E3000F;
-        --spd-dark-red: #A41D21;
-        --spd-gray: #878787;
-        --spd-light-gray: #f5f5f5;
-        --spd-white: #ffffff;
-        
-        /* Animation Constants */
-        --transition-speed: 0.3s;
-    }
-
-    /* Critical Path CSS */
-    .route-detail-card {
-        background: var(--spd-white);
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(227, 0, 15, 0.1);
-        margin-bottom: 1.5rem;
-        padding: 2rem;
-        transition: transform var(--transition-speed) ease;
-    }
-
-    .route-header {
-        margin-bottom: 2rem;
-    }
-
-    .route-header h1 {
-        color: var(--spd-dark-red);
-        margin-bottom: 0.5rem;
-    }
-
-    .route-header p {
-        color: var(--spd-gray);
-        font-size: 1.1rem;
-        margin-bottom: 0;
-    }
-
-    .route-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: var(--spd-light-gray);
-        padding: 1.5rem;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .stat-card h3 {
-        color: var(--spd-dark-red);
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-    }
-
-    .stat-card p {
-        color: var(--spd-gray);
-        margin-bottom: 0;
-        font-size: 2rem;
-        font-weight: 600;
-    }
-
-    .progress {
-        height: 20px;
-        background-color: var(--spd-light-gray);
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
-
-    .progress-bar {
-        background-color: var(--spd-red);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--spd-white);
-        font-weight: 600;
-        width: 0;
-    }
-
-    .map-container {
-        position: relative;
-        width: 100%;
-        height: 50vh;
-        min-height: 300px;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 2rem;
-        pointer-events: auto;
-    }
-    
-    .map-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 1030;
-        border-radius: 0;
-    }
-    
-    .map-controls {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 50;
-    }
-    
-    .map-control-btn {
-        background: white;
-        border: none;
-        border-radius: 4px;
-        padding: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        cursor: pointer;
-        margin-left: 5px;
-    }
-    
-    .map-control-btn:hover {
-        background: #f8f9fa;
-    }
-    
-    @media (max-width: 768px) {
-        .map-container {
-            height: 40vh;
-        }
-    }
-
-    .registration-section {
-        margin-top: 3rem;
-    }
-
-    .registration-section h2 {
-        color: var(--spd-dark-red);
-        margin-bottom: 1.5rem;
-    }
-
-    .registration-card {
-        background: var(--spd-white);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .registration-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-
-    /* Loading Animation */
-    .loading-spinner {
-        display: none;
-        width: 50px;
-        height: 50px;
-        border: 5px solid var(--spd-light-gray);
-        border-top: 5px solid var(--spd-red);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Form Validation Styles */
-    .form-control.is-invalid {
-        border-color: var(--spd-red);
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23E3000F'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23E3000F' stroke='none'/%3e%3c/svg%3e");
-    }
-
-    .invalid-feedback {
-        color: var(--spd-red);
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    /* Toast Notification */
-    .toast-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1060;
-        pointer-events: none;
-    }
-
-    .toast {
-        pointer-events: auto;
-        background: var(--spd-white);
-        border-left: 4px solid var(--spd-red);
-    }
-
-    /* Modal Styles */
-    .modal-backdrop {
-        display: none !important;
-    }
-
-    .modal {
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1050;
-    }
-
-    .modal-dialog {
-        position: relative;
-        width: auto;
-        max-width: 500px;
-        margin: 1.75rem auto !important;
-        z-index: 1051;
-    }
-
-    .modal-content {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        pointer-events: auto;
-        background-color: #fff;
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        outline: 0;
-        z-index: 1052;
-    }
-
-    .modal-header {
-        background-color: var(--spd-red);
-        color: white;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        padding: 1rem 1.5rem;
-    }
-
-    .modal-title {
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .modal-header .btn-close {
-        color: white;
-        opacity: 1;
-        text-shadow: none;
-        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
-    }
-
-    .modal-body {
-        padding: 1.5rem;
-    }
-
-    .wizard-progress {
-        margin-bottom: 2rem;
-        display: flex;
-        justify-content: space-between;
-        position: relative;
-        padding: 0 1.5rem;
-    }
-
-    .wizard-progress::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 2rem;
-        right: 2rem;
-        height: 2px;
-        background: var(--spd-light-gray);
-        z-index: 1;
-    }
-
-    .progress-step {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--spd-light-gray);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        position: relative;
-        z-index: 2;
-        transition: all 0.3s ease;
-    }
-
-    .progress-step.active {
-        border-color: var(--spd-red);
-        background: var(--spd-red);
-        color: white;
-    }
-
-    .wizard-step {
-        display: none;
-    }
-
-    .wizard-step.active {
-        display: block;
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: var(--spd-dark-gray);
-        margin-bottom: 0.5rem;
-    }
-
-    .form-control {
-        border-radius: 8px;
-        border: 2px solid var(--spd-light-gray);
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-control:focus {
-        border-color: var(--spd-red);
-        box-shadow: 0 0 0 0.2rem rgba(227, 0, 15, 0.1);
-    }
-
-    .btn-primary {
-        background: var(--spd-red);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        background: var(--spd-dark-red);
-        transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-        background: var(--spd-light-gray);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        color: var(--spd-dark-gray);
-        transition: all 0.3s ease;
-    }
-
-    .btn-secondary:hover {
-        background: var(--spd-gray);
-        transform: translateY(-1px);
-    }
-
-    @media (max-width: 768px) {
-        .modal {
-            padding: 0.5rem;
-        }
-
-        .modal-dialog {
-            margin: 0.5rem;
-        }
-
-        .wizard-progress {
-            padding: 0 1rem;
-        }
-    }
-
-    /* Index Styles */
-    .index-container {
-        margin-bottom: 1.5rem;
-    }
-    
-    .index-label {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .index-icon {
-        margin-right: 0.5rem;
-        color: var(--spd-red);
-    }
-    
-    .progress {
-        background: linear-gradient(to right, #ffebee, #ffcdd2);
-        height: 25px;
-    }
-    
-    .progress-bar {
-        background: linear-gradient(to right, var(--spd-red), var(--spd-dark-red));
-        transition: width 0.6s ease;
-    }
-    
-    .progress-tooltip {
-        position: relative;
-        cursor: help;
-    }
-    
-    .progress-tooltip:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 0.5rem;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        white-space: nowrap;
-        z-index: 1000;
-    }
-
-    /* Timeline Styles */
-    .timeline {
-        position: relative;
-        padding: 20px 0;
-    }
-    
-    .timeline::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 2px;
-        height: 100%;
-        background: var(--spd-light-gray);
-    }
-    
-    .timeline-item {
-        position: relative;
-        margin-bottom: 30px;
-    }
-    
-    .timeline-content {
-        position: relative;
-        width: calc(50% - 30px);
-        padding: 15px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .timeline-item:nth-child(odd) .timeline-content {
-        margin-left: auto;
-    }
-    
-    .timeline-item::before {
-        content: '';
-        position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: var(--spd-red);
-        z-index: 1;
-    }
-    
-    .timeline-date {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: var(--spd-dark-red);
-    }
-    
-    .timeline-slot {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        background: var(--spd-light-gray);
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .timeline-status {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-    }
-    
-    @media (max-width: 768px) {
-        .timeline::before {
-            left: 30px;
-        }
-        
-        .timeline-content {
-            width: calc(100% - 60px);
-            margin-left: 60px !important;
-        }
-        
-        .timeline-item::before {
-            left: 30px;
-        }
-    }
-
-    /* Form Wizard Styles */
-    .form-wizard {
-        position: relative;
-    }
-    
-    .wizard-step {
-        display: none;
-    }
-    
-    .wizard-step.active {
-        display: block;
-    }
-    
-    .wizard-progress {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-        position: relative;
-    }
-    
-    .wizard-progress::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: var(--spd-light-gray);
-        z-index: 1;
-    }
-    
-    .progress-step {
-        position: relative;
-        z-index: 2;
-        background: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 2px solid var(--spd-light-gray);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    .progress-step.active {
-        border-color: var(--spd-red);
-        background: var(--spd-red);
-        color: white;
-    }
-    
-    .progress-step.completed {
-        border-color: var(--spd-red);
-        background: white;
-        color: var(--spd-red);
-    }
-    
-    .wizard-buttons {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 1rem;
-    }
-    
-    /* Date Picker Styles */
-    .date-picker {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-        margin-bottom: 1rem;
-    }
-    
-    .date-option {
-        padding: 10px;
-        border: 2px solid var(--spd-light-gray);
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .date-option:hover {
-        border-color: var(--spd-red);
-    }
-    
-    .date-option.selected {
-        background: var(--spd-red);
-        border-color: var(--spd-red);
-        color: white;
-    }
-    
-    .time-slot-picker {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 10px;
-        margin-bottom: 1rem;
-    }
-    
-    .time-slot-option {
-        padding: 10px;
-        border: 2px solid var(--spd-light-gray);
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .time-slot-option:hover {
-        border-color: var(--spd-red);
-    }
-    
-    .time-slot-option.selected {
-        background: var(--spd-red);
-        border-color: var(--spd-red);
-        color: white;
-    }
-
-    /* Mobile Navigation Styles */
-    .mobile-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        z-index: 90;
-        display: none;
-    }
-
-    .mobile-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 0.5rem;
-        box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-        z-index: 90;
-        display: none;
-    }
-
-    .mobile-nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 0.5rem;
-        color: var(--spd-gray);
-        text-decoration: none;
-        font-size: 0.8rem;
-    }
-
-    .mobile-nav-item i {
-        font-size: 1.2rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .mobile-nav-item.active {
-        color: var(--spd-red);
-    }
-
-    /* Statistik-Karussell */
-    .stats-carousel {
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -1rem;
-        padding: 0 1rem;
-        scroll-padding: 0 1rem;
-    }
-
-    .stat-card {
-        flex: 0 0 auto;
-        width: 200px;
-        margin-right: 1rem;
-        scroll-snap-align: start;
-    }
-
-    .stat-ring {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 1rem;
-    }
-
-    .stat-ring-circle {
-        stroke: var(--spd-red);
-        fill: none;
-        stroke-width: 8;
-        stroke-linecap: round;
-        transform: rotate(-90deg);
-        transform-origin: 50% 50%;
-        transition: stroke-dashoffset 0.6s ease;
-    }
-
-    .stat-ring-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: var(--spd-dark-red);
-    }
-
-    /* Horizontale Timeline */
-    .timeline-horizontal {
-        display: none;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding: 1rem 0;
-        margin: 0 -1rem;
-    }
-
-    .timeline-item-horizontal {
-        display: inline-block;
-        width: 250px;
-        margin-right: 1rem;
-        white-space: normal;
-        vertical-align: top;
-    }
-
-    /* Mini-Karte */
-    .mini-map {
-        display: none !important;
-    }
-
-    .mini-map-close {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: white;
-        border: none;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-        cursor: pointer;
-    }
-
-    @media (max-width: 768px) {
-        body {
-            padding-top: 60px;
-            padding-bottom: 60px;
-        }
-
-        .mobile-header,
-        .mobile-bottom-nav {
-            display: flex;
-            justify-content: space-around;
-        }
-
-        .timeline {
-            display: none;
-        }
-
-        .timeline-horizontal {
-            display: block;
-        }
-
-        .map-container {
-            height: 40vh;
-        }
-
-        .mini-map {
-            display: block;
-        }
-
-        .route-stats {
-            display: block;
-            margin: 0 -1rem;
-        }
-
-        .stats-carousel {
-            display: flex;
-        }
-
-        .modal-dialog {
-            margin: 0.5rem;
-            max-width: calc(100% - 1rem);
-        }
-
-        .wizard-progress {
-            padding: 0 1rem;
-        }
-
-        .date-picker {
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        }
-
-        .time-slot-picker {
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        }
-    }
-
-    @media (max-width: 576px) {
-        .modal-dialog {
-            margin: 0.5rem !important;
-            max-width: calc(100% - 1rem);
-        }
-    }
-
-    /* Ensure content is clickable */
-    .container {
-        position: relative;
-        z-index: 1;
-    }
-
-    .card {
-        position: relative;
-        z-index: 1;
-    }
-
-    .btn {
-        position: relative;
-        z-index: 2;
-    }
-
-    /* Ensure content is always visible */
-    .container {
-        position: relative;
-        z-index: 10;
-        background: white;
-    }
-
-    .card {
-        position: relative;
-        z-index: 10;
-        background: white;
-    }
-
-    /* Remove any remaining overlays */
-    body::before {
-        display: none !important;
-    }
-
-    body.modal-open {
-        overflow: auto !important;
-        padding-right: 0 !important;
-    }
-
-    /* Ensure buttons are clickable */
-    .btn {
-        position: relative;
-        z-index: 2;
-    }
-
-    .btn-close {
-        z-index: 1053;
-    }
-
-    /* Mobile Optimierungen */
-    @media (max-width: 768px) {
-        .route-detail-card {
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .route-header h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .route-header p {
-            font-size: 1rem;
-        }
-
-        .route-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .index-container {
-            margin-bottom: 0.5rem;
-        }
-
-        .index-label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.25rem;
-        }
-
-        .index-label strong {
-            margin-left: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .progress {
-            height: 16px;
-            margin-bottom: 0.5rem;
-        }
-
-        .progress-bar {
-            font-size: 0.8rem;
-        }
-
-        .stat-card {
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card h3 {
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-card p {
-            font-size: 1.5rem;
-        }
-
-        /* Routendetails im mobilen Layout */
-        .route-details {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-            margin: 1rem 0;
-        }
-
-        .route-details-item {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            background: var(--spd-light-gray);
-            border-radius: 8px;
-        }
-
-        .route-details-item i {
-            margin-right: 0.5rem;
-            color: var(--spd-red);
-        }
-
-        /* Verbessere die Lesbarkeit der Texte */
-        .lead {
-            font-size: 1rem;
-            line-height: 1.4;
-            margin-bottom: 1rem;
-        }
-
-        /* Optimiere die Buttons */
-        .btn {
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-        }
-
-        /* Verbessere die Navigation */
-        .mobile-nav-item {
-            font-size: 0.75rem;
-            padding: 0.25rem;
-        }
-
-        .mobile-nav-item i {
-            font-size: 1rem;
-        }
-    }
-
-    /* Zusätzliche Optimierungen für sehr kleine Bildschirme */
-    @media (max-width: 375px) {
-        .route-header h1 {
-            font-size: 1.25rem;
-        }
-
-        .btn {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.9rem;
-        }
-
-        .progress {
-            height: 12px;
-        }
-
-        .progress-bar {
-            font-size: 0.7rem;
-        }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-8">
-            <!-- Routendetails -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="route-detail-card">
-                        <div class="route-header">
-                            <h1>{{ route.street }}</h1>
-                            <p>{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>
+        <div class="col-md-6">
+            <h2>{{ route.street }} {{ route.house_numbers }}</h2>
+            <p><strong>Stadt:</strong> {{ route.city }}</p>
+            <p><strong>Bezirk:</strong> {{ route.district }}</p>
+            <p><strong>PLZ:</strong> {{ route.zip_code }}</p>
+            <p><strong>Treffpunkt:</strong> {{ route.meeting_point }}</p>
+            
+            <!-- Statistiken -->
+            <div class="stats-container mt-4">
+                <h4>Statistiken</h4>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <i class="fas fa-home"></i>
+                            <span class="stat-value">{{ route.households }}</span>
+                            <span class="stat-label">Haushalte</span>
                         </div>
-
-                        <div class="route-stats">
-                            <div class="index-container">
-                                <div class="index-label">
-                                    <i class="fas fa-bullhorn index-icon" title="Mobilisierungsindex"></i>
-                                    <strong>Mobilisierung</strong>
-                                </div>
-                                <div class="progress progress-tooltip" 
-                                     data-tooltip="Zeigt an, wie gut sich die Route für Mobilisierung eignet ({{ route.mobilization_index }}/3)">
-                                    <div class="progress-bar" 
-                                         role="progressbar" 
-                                         style="width: {{ (route.mobilization_index/3*100)|round }}%">
-                                        {{ route.mobilization_index }}/3
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="index-container">
-                                <div class="index-label">
-                                    <i class="fas fa-handshake index-icon" title="Überzeugungsindex"></i>
-                                    <strong>Überzeugung</strong>
-                                </div>
-                                <div class="progress progress-tooltip"
-                                     data-tooltip="Zeigt an, wie hoch das Überzeugungspotenzial in dieser Route ist ({{ route.conviction_index }}/3)">
-                                    <div class="progress-bar" 
-                                         role="progressbar" 
-                                         style="width: {{ (route.conviction_index/3*100)|round }}%">
-                                        {{ route.conviction_index }}/3
-                                    </div>
-                                </div>
-                            </div>
-                            {% if route.households %}
-                            <div class="stat-card">
-                                <h3>Haushalte</h3>
-                                <p>{{ route.households }}</p>
-                            </div>
-                            {% endif %}
-                            {% if route.rental_percentage %}
-                            <div class="stat-card">
-                                <h3>Mietquote</h3>
-                                <p>{{ "%.1f"|format(route.rental_percentage) }}%</p>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="highlight-box">
-                            <h5><i class="fas fa-route text-primary"></i> Routendetails</h5>
-                            <p class="lead">
-                                Diese Route wurde für Jan Dierens Haustürwahlkampf 2025 optimiert.
-                                Sie umfasst {{ route.house_numbers }} und ist für einen 2-stündigen Einsatz im Zweierteam ausgelegt.
-                                Gemeinsam sprechen wir mit den Menschen über bezahlbares Wohnen, gute Arbeit und unsere Zukunft.
-                            </p>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item bg-transparent">
-                                            <i class="fas fa-clock text-info"></i> Zeitbedarf: 2 Stunden
-                                        </li>
-                                        <li class="list-group-item bg-transparent">
-                                            <i class="fas fa-door-open text-success"></i> Geplante Gespräche: 10-15 Haushalte
-                                        </li>
-                                        <li class="list-group-item bg-transparent">
-                                            <i class="fas fa-walking text-primary"></i> Empfohlene Gehrichtung: 
-                                            <br>von {{ route.house_numbers.split('-')[0] }} 
-                                            bis {{ route.house_numbers.split('-')[1] }}
-                                        </li>
-                                        {% if route.meeting_point %}
-                                        <li class="list-group-item bg-transparent">
-                                            <i class="fas fa-map-marker-alt text-danger"></i> Treffpunkt: 
-                                            <br>{{ route.meeting_point }}
-                                        </li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="mb-3">Beste Besuchszeiten:</h6>
-                                    <span class="time-slot-badge">
-                                        <i class="fas fa-sun"></i> Werktags 17-19 Uhr
-                                    </span>
-                                    <span class="time-slot-badge">
-                                        <i class="fas fa-coffee"></i> Samstags 11-13 Uhr
-                                    </span>
-                                    <div class="mt-4">
-                                        <p class="text-muted">
-                                            <i class="fas fa-info-circle"></i> 
-                                            Du erhältst vor deinem Einsatz eine kurze Einführung und alle wichtigen Materialien. 
-                                            Jan wird regelmäßig selbst mit dabei sein!
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="registration-section">
-                            <h2>Registrierungen</h2>
-                            {% if registrations %}
-                            <div class="timeline">
-                                {% for reg in registrations|sort(attribute='date') %}
-                                <div class="timeline-item">
-                                    <div class="timeline-content">
-                                        <div class="timeline-date">
-                                            {{ reg.date.strftime('%d.%m.%Y') }}
-                                        </div>
-                                        <div class="timeline-slot">
-                                            <i class="far fa-clock"></i> {{ reg.time_slot }}
-                                        </div>
-                                        <div class="timeline-volunteer">
-                                            <i class="far fa-user"></i> {{ reg.volunteer.name }}
-                                        </div>
-                                        <span class="badge timeline-status 
-                                            {% if reg.status == 'geplant' %}bg-warning
-                                            {% elif reg.status == 'abgeschlossen' %}bg-success
-                                            {% else %}bg-danger{% endif %}">
-                                            {{ reg.status }}
-                                        </span>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% else %}
-                            <p class="text-muted">Noch keine Registrierungen für diese Route.</p>
-                            {% endif %}
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <i class="fas fa-percentage"></i>
+                            <span class="stat-value">{{ route.rental_percentage }}%</span>
+                            <span class="stat-label">Mietanteil</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Google Maps Container -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="map-container" id="mapContainer">
-                        <div id="map" style="width: 100%; height: 100%;"></div>
-                        <div class="map-controls">
-                            <button class="map-control-btn" id="fullscreenBtn" title="Vollbild">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                            <button class="map-control-btn" id="zoomInBtn" title="Vergrößern">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="map-control-btn" id="zoomOutBtn" title="Verkleinern">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <!-- Registrierungsbutton -->
+            <div class="mt-4">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrationModal">
+                    Als Freiwilliger registrieren
+                </button>
             </div>
         </div>
-
-        <div class="col-md-4">
-            <!-- Aktionsbuttons -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Aktionen</h5>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#registrationModal"
-                                data-route-id="{{ route.id }}">
-                            Route reservieren
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="window.history.back()">
-                            Zurück zur Übersicht
-                        </button>
-                    </div>
-                </div>
-            </div>
+        
+        <!-- Google Maps -->
+        <div class="col-md-6">
+            <div id="map" style="height: 400px;"></div>
         </div>
-    </div>
-</div>
-
-<!-- Loading Spinner -->
-<div id="loadingSpinner" class="loading-spinner"></div>
-
-<!-- Toast Container -->
-<div class="toast-container">
-    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Mitteilung</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Schließen"></button>
-        </div>
-        <div class="toast-body"></div>
     </div>
 </div>
 
@@ -1213,7 +55,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm" method="POST" action="{{ url_for('register_route', route_id=route.id) }}">
+                <form id="registrationForm" class="needs-validation" novalidate>
                     <!-- Schritt 1: Persönliche Daten -->
                     <div class="wizard-step active">
                         <h6 class="mb-3">Persönliche Daten</h6>
@@ -1264,200 +106,114 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Registrieren</button>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary btn-prev d-none">Zurück</button>
+                        <button type="button" class="btn btn-primary btn-next">Weiter</button>
+                        <button type="submit" class="btn btn-success d-none">Registrierung abschließen</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Toast Benachrichtigung -->
-<div class="toast-container position-fixed top-0 end-0 p-3">
-    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Hinweis</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Schließen"></button>
-        </div>
-        <div class="toast-body"></div>
-    </div>
-</div>
-
+<!-- Google Maps Script -->
 <script>
-    // Globale Variablen
-    let map;
-    let directionsService;
-    let directionsRenderer;
-    let currentStep = 1;
-    const totalSteps = 3;
+function initMap() {
+    const routeLocation = { lat: {{ route.lat }}, lng: {{ route.lon }} };
+    const meetingPoint = { lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }} };
+    
+    const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 16,
+        center: routeLocation
+    });
+    
+    // Route marker
+    new google.maps.Marker({
+        position: routeLocation,
+        map: map,
+        title: '{{ route.street }} {{ route.house_numbers }}'
+    });
+    
+    // Meeting point marker
+    new google.maps.Marker({
+        position: meetingPoint,
+        map: map,
+        title: 'Treffpunkt: {{ route.meeting_point }}',
+        icon: {
+            url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        }
+    });
+}
+</script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap">
+</script>
 
-    // DOM Content Loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        setupFormHandlers();
-        initializeWizard();
-        initMap();
+<!-- Form Handling Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    const nextBtn = document.querySelector('.btn-next');
+    const prevBtn = document.querySelector('.btn-prev');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const steps = document.querySelectorAll('.wizard-step');
+    let currentStep = 0;
+
+    function showStep(stepIndex) {
+        steps.forEach((step, index) => {
+            step.classList.toggle('active', index === stepIndex);
+        });
+        
+        prevBtn.classList.toggle('d-none', stepIndex === 0);
+        nextBtn.classList.toggle('d-none', stepIndex === steps.length - 1);
+        submitBtn.classList.toggle('d-none', stepIndex !== steps.length - 1);
+    }
+
+    nextBtn.addEventListener('click', () => {
+        if (validateCurrentStep()) {
+            currentStep++;
+            showStep(currentStep);
+        }
     });
 
-    // Form Handler Setup
-    function setupFormHandlers() {
-        const form = document.getElementById('registrationForm');
-        const nextButtons = document.querySelectorAll('.btn-next');
-        const prevButtons = document.querySelectorAll('.btn-prev');
-        const inputs = document.querySelectorAll('input[required], select[required]');
+    prevBtn.addEventListener('click', () => {
+        currentStep--;
+        showStep(currentStep);
+    });
 
-        if (form) {
-            form.addEventListener('submit', handleRegistration);
-        }
-
-        nextButtons.forEach(button => {
-            button.addEventListener('click', nextStep);
-        });
-
-        prevButtons.forEach(button => {
-            button.addEventListener('click', previousStep);
-        });
-
-        inputs.forEach(input => {
-            input.addEventListener('input', () => validateInput(input));
-        });
-    }
-
-    // Wizard initialisieren
-    function initializeWizard() {
-        const steps = document.querySelectorAll('.wizard-step');
-        if (steps.length > 0) {
-            steps.forEach((step, index) => {
-                if (index === 0) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-            updateProgressBar();
-        }
-    }
-
-    // Nächster Schritt
-    function nextStep() {
-        const currentStep = document.querySelector('.wizard-step.active');
-        if (currentStep && validateStep(currentStep)) {
-            const nextStep = currentStep.nextElementSibling;
-            if (nextStep && nextStep.classList.contains('wizard-step')) {
-                currentStep.classList.remove('active');
-                nextStep.classList.add('active');
-                updateProgressBar();
-                updateConfirmationStep();
-            }
-        }
-    }
-
-    // Vorheriger Schritt
-    function previousStep() {
-        const currentStep = document.querySelector('.wizard-step.active');
-        if (currentStep) {
-            const prevStep = currentStep.previousElementSibling;
-            if (prevStep && prevStep.classList.contains('wizard-step')) {
-                currentStep.classList.remove('active');
-                prevStep.classList.add('active');
-                updateProgressBar();
-            }
-        }
-    }
-
-    // Bestätigungsschritt aktualisieren
-    function updateConfirmationStep() {
-        const lastStep = document.querySelector('.wizard-step:last-child');
-        if (lastStep && lastStep.classList.contains('active')) {
-            document.getElementById('confirmName').textContent = document.getElementById('name').value;
-            document.getElementById('confirmEmail').textContent = document.getElementById('email').value;
-            document.getElementById('confirmPhone').textContent = document.getElementById('phone').value;
-            document.getElementById('confirmDate').textContent = document.getElementById('date').value;
-            const timeSlot = document.getElementById('timeSlot');
-            document.getElementById('confirmTimeSlot').textContent = timeSlot.options[timeSlot.selectedIndex].text;
-        }
-    }
-
-    // Schritt validieren
-    function validateStep(step) {
-        const inputs = step.querySelectorAll('input[required], select[required]');
+    function validateCurrentStep() {
+        const currentStepElement = steps[currentStep];
+        const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
         let isValid = true;
+
         inputs.forEach(input => {
-            if (!input.validity.valid) {
+            if (!input.value) {
                 isValid = false;
                 input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
             }
         });
+
         return isValid;
     }
 
-    // Progress Bar aktualisieren
-    function updateProgressBar() {
-        const steps = document.querySelectorAll('.wizard-step');
-        const progressSteps = document.querySelectorAll('.progress-step');
-        const activeStep = document.querySelector('.wizard-step.active');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        if (steps.length > 0 && progressSteps.length > 0 && activeStep) {
-            const stepIndex = Array.from(steps).indexOf(activeStep);
-            progressSteps.forEach((step, index) => {
-                if (index <= stepIndex) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-        }
-    }
+        if (!validateCurrentStep()) return;
 
-    // Input Validierung
-    function validateInput(input) {
-        if (input.validity.valid) {
-            input.classList.remove('is-invalid');
-            input.classList.add('is-valid');
-        } else {
-            input.classList.remove('is-valid');
-            input.classList.add('is-invalid');
-        }
-    }
+        const formData = {
+            route_id: {{ route.id }},
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            date: document.getElementById('date').value,
+            time_slot: document.getElementById('timeSlot').value
+        };
 
-    // Form Validierung
-    function validateForm(form) {
-        const inputs = form.querySelectorAll('input[required], select[required]');
-        let isValid = true;
-        inputs.forEach(input => {
-            if (!input.validity.valid) {
-                isValid = false;
-                input.classList.add('is-invalid');
-            }
-        });
-        return isValid;
-    }
-
-    // Registrierungs-Handler
-    async function handleRegistration(event) {
-        event.preventDefault();
-        
-        const form = event.target;
-        if (!validateForm(form)) {
-            return;
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const spinner = submitButton.querySelector('.spinner-border');
-        
         try {
-            submitButton.disabled = true;
-            if (spinner) {
-                spinner.classList.remove('d-none');
-            }
-
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                route_id: {{ route.id }},
-                date: document.getElementById('date').value,
-                time_slot: document.getElementById('timeSlot').value
-            };
-
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: {
@@ -1466,212 +222,18 @@
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (response.ok) {
-                showNotification('Registrierung erfolgreich! Sie erhalten eine Bestätigungs-E-Mail.');
-                setTimeout(() => window.location.reload(), 2000);
+            if (result.success) {
+                alert('Registrierung erfolgreich!');
+                window.location.reload();
             } else {
-                showNotification(data.error || 'Ein Fehler ist aufgetreten.', 'error');
+                alert('Fehler bei der Registrierung: ' + result.error);
             }
         } catch (error) {
-            console.error('Error:', error);
-            showNotification('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.', 'error');
-        } finally {
-            submitButton.disabled = false;
-            if (spinner) {
-                spinner.classList.add('d-none');
-            }
+            alert('Ein Fehler ist aufgetreten: ' + error);
         }
-    }
-
-    // Toast Benachrichtigung anzeigen
-    function showNotification(message, type = 'success') {
-        const toast = document.getElementById('notificationToast');
-        const toastBody = toast.querySelector('.toast-body');
-        toastBody.textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger');
-        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-    }
-
-    // Map initialisieren
-    function initMap() {
-        const routeCenter = {
-            lat: {{ route.lat|default(MAP_DEFAULT_LAT) }},
-            lng: {{ route.lon|default(MAP_DEFAULT_LON) }}
-        };
-        
-        try {
-            setupMap(routeCenter);
-            setupRouteMarker(routeCenter);
-            setupMeetingPoint();
-            setupDirections();
-            setupMapControls();
-        } catch (error) {
-            console.error('Error initializing map:', error);
-            showNotification('Fehler beim Laden der Karte.', 'error');
-        }
-    }
-
-    // Map Setup
-    function setupMap(center) {
-        const mapOptions = {
-            zoom: 15,
-            center: center,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            styles: [{
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }]
-            }]
-        };
-        
-        map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    }
-
-    // Route Marker Setup
-    function setupRouteMarker(position) {
-        const routeMarker = new google.maps.Marker({
-            position: position,
-            map: map,
-            title: '{{ route.street }}',
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#E3000F",
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#ffffff"
-            }
-        });
-
-        const routeInfo = new google.maps.InfoWindow({
-            content: `
-                <div style="padding: 10px;">
-                    <h6 style="color: #A41D21; margin-bottom: 5px;">{{ route.street }}</h6>
-                    <p style="margin: 0;">{{ route.house_numbers }}, {{ route.zip_code }} {{ route.city }}</p>
-                </div>
-            `
-        });
-
-        routeMarker.addListener('click', () => routeInfo.open(map, routeMarker));
-    }
-
-    // Meeting Point Setup
-    function setupMeetingPoint() {
-        {% if route.meeting_point and route.meeting_point_lat and route.meeting_point_lon %}
-        const meetingPoint = new google.maps.Marker({
-            position: {
-                lat: {{ route.meeting_point_lat }},
-                lng: {{ route.meeting_point_lon }}
-            },
-            map: map,
-            title: 'Treffpunkt',
-            icon: {
-                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                scale: 6,
-                fillColor: "#E3000F",
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#ffffff"
-            }
-        });
-
-        const meetingPointInfo = new google.maps.InfoWindow({
-            content: `
-                <div style="padding: 10px;">
-                    <h6 style="color: #A41D21; margin-bottom: 5px;">Treffpunkt</h6>
-                    <p style="margin: 0;">{{ route.meeting_point }}</p>
-                </div>
-            `
-        });
-
-        meetingPoint.addListener('click', () => meetingPointInfo.open(map, meetingPoint));
-        {% endif %}
-    }
-
-    // Directions Setup
-    function setupDirections() {
-        directionsService = new google.maps.DirectionsService();
-        directionsRenderer = new google.maps.DirectionsRenderer({
-            map: map,
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: '#E3000F',
-                strokeOpacity: 0.8,
-                strokeWeight: 5
-            }
-        });
-
-        const numbers = '{{ route.house_numbers }}'.split('-');
-        const startNum = parseInt(numbers[0].trim(), 10);
-        const endNum = parseInt(numbers[1].trim(), 10);
-        const startAddress = `{{ route.street }} ${startNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
-        const endAddress = `{{ route.street }} ${endNum}, {{ route.zip_code }} {{ route.city }}, Germany`;
-
-        calculateRoute(startAddress, endAddress);
-    }
-
-    // Route berechnen
-    function calculateRoute(startAddress, endAddress) {
-        directionsService.route({
-            origin: startAddress,
-            destination: endAddress,
-            travelMode: google.maps.TravelMode.WALKING
-        }, (response, status) => {
-            if (status === 'OK') {
-                directionsRenderer.setDirections(response);
-                const coordinates = response.routes[0].overview_path.map(point => ({
-                    lat: point.lat(),
-                    lng: point.lng()
-                }));
-                saveRouteCoordinates(coordinates);
-            } else {
-                console.error('Directions request failed:', status);
-                showNotification('Fehler beim Laden der Route.', 'error');
-            }
-        });
-    }
-
-    // Route Koordinaten speichern
-    async function saveRouteCoordinates(coordinates) {
-        try {
-            await fetch('/api/routes/{{ route.id }}/path', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ coordinates: coordinates })
-            });
-        } catch (error) {
-            console.error('Error saving route coordinates:', error);
-        }
-    }
-
-    // Karten-Kontrollen
-    function setupMapControls() {
-        const mapContainer = document.getElementById('mapContainer');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const zoomInBtn = document.getElementById('zoomInBtn');
-        const zoomOutBtn = document.getElementById('zoomOutBtn');
-        
-        fullscreenBtn.addEventListener('click', () => {
-            mapContainer.classList.toggle('map-fullscreen');
-            const icon = fullscreenBtn.querySelector('i');
-            icon.classList.toggle('fa-expand');
-            icon.classList.toggle('fa-compress');
-            google.maps.event.trigger(map, 'resize');
-        });
-        
-        zoomInBtn.addEventListener('click', () => {
-            map.setZoom(map.getZoom() + 1);
-        });
-        
-        zoomOutBtn.addEventListener('click', () => {
-            map.setZoom(map.getZoom() - 1);
-        });
-    }
+    });
+});
 </script>
 {% endblock %} 
