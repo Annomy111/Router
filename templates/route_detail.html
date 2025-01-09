@@ -1213,40 +1213,30 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm" class="needs-validation" novalidate>
-                    <!-- Progress Bar -->
-                    <div class="wizard-progress mb-4">
-                        <div class="progress-step active" data-step="1">1</div>
-                        <div class="progress-step" data-step="2">2</div>
-                        <div class="progress-step" data-step="3">3</div>
-                    </div>
-
+                <form id="registrationForm" method="POST" action="{{ url_for('register_route', route_id=route.id) }}">
                     <!-- Schritt 1: Persönliche Daten -->
                     <div class="wizard-step active">
                         <h6 class="mb-3">Persönliche Daten</h6>
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <input type="text" class="form-control" id="name" name="name" required autocomplete="name">
                             <div class="invalid-feedback">
                                 Bitte geben Sie Ihren Namen ein.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">E-Mail</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email" required autocomplete="email">
                             <div class="invalid-feedback">
                                 Bitte geben Sie eine gültige E-Mail-Adresse ein.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Telefon</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <input type="tel" class="form-control" id="phone" name="phone" required autocomplete="tel">
                             <div class="invalid-feedback">
                                 Bitte geben Sie Ihre Telefonnummer ein.
                             </div>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-primary btn-next">Weiter</button>
                         </div>
                     </div>
 
@@ -1255,14 +1245,14 @@
                         <h6 class="mb-3">Zeitauswahl</h6>
                         <div class="mb-3">
                             <label for="date" class="form-label">Datum</label>
-                            <input type="date" class="form-control" id="date" name="date" required>
+                            <input type="date" class="form-control" id="date" name="date" required autocomplete="off">
                             <div class="invalid-feedback">
                                 Bitte wählen Sie ein Datum aus.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="timeSlot" class="form-label">Zeitfenster</label>
-                            <select class="form-select" id="timeSlot" name="timeSlot" required>
+                            <select class="form-select" id="timeSlot" name="timeSlot" required autocomplete="off">
                                 <option value="">Bitte wählen...</option>
                                 <option value="morning">Vormittag (9:00 - 12:00)</option>
                                 <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
@@ -1272,30 +1262,9 @@
                                 Bitte wählen Sie ein Zeitfenster aus.
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between gap-2">
-                            <button type="button" class="btn btn-secondary btn-prev">Zurück</button>
-                            <button type="button" class="btn btn-primary btn-next">Weiter</button>
-                        </div>
                     </div>
 
-                    <!-- Schritt 3: Bestätigung -->
-                    <div class="wizard-step">
-                        <h6 class="mb-4">Überprüfen Sie Ihre Angaben</h6>
-                        <div class="confirmation-details">
-                            <p><strong>Name:</strong> <span id="confirmName"></span></p>
-                            <p><strong>E-Mail:</strong> <span id="confirmEmail"></span></p>
-                            <p><strong>Telefon:</strong> <span id="confirmPhone"></span></p>
-                            <p><strong>Datum:</strong> <span id="confirmDate"></span></p>
-                            <p><strong>Zeitfenster:</strong> <span id="confirmTimeSlot"></span></p>
-                        </div>
-                        <div class="d-flex justify-content-between gap-2 mt-4">
-                            <button type="button" class="btn btn-secondary btn-prev">Zurück</button>
-                            <button type="submit" class="btn btn-primary">
-                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                Registrierung abschließen
-                            </button>
-                        </div>
-                    </div>
+                    <button type="submit" class="btn btn-primary">Registrieren</button>
                 </form>
             </div>
         </div>

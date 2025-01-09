@@ -1382,6 +1382,21 @@ def register_route():
             'error': str(e)
         }), 500
 
+@app.after_request
+def add_security_headers(response):
+    if response.mimetype == 'text/html':
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.mapbox.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://api.mapbox.com; "
+            "img-src 'self' data: https://api.mapbox.com https://*.tiles.mapbox.com https://unpkg.com; "
+            "connect-src 'self' https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com; "
+            "frame-src 'self'; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "object-src 'none';"
+        )
+    return response
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001) 
