@@ -132,20 +132,11 @@ function initMap() {
         lng: parseFloat('{{ route.lon }}')
     };
     
-    // Berechne Endpunkt basierend auf Hausnummern
-    const [startNum, endNum] = '{{ route.house_numbers }}'.split('-').map(Number);
-    const distance = (endNum - startNum) * 0.00005; // Ungefährer Abstand zwischen Hausnummern
+    // Geocoding für Start- und Endadresse
+    const geocoder = new google.maps.Geocoder();
+    const startAddress = "{{ route.street }} {{ route.house_numbers.split('-')[0] }}, {{ route.city }}";
+    const endAddress = "{{ route.street }} {{ route.house_numbers.split('-')[1] }}, {{ route.city }}";
     
-    const routeEnd = {
-        lat: routeStart.lat + (distance * 0.5),
-        lng: routeStart.lng + (distance * 0.5)
-    };
-    
-    const meetingPoint = {
-        lat: parseFloat('{{ route.meeting_point_lat }}'),
-        lng: parseFloat('{{ route.meeting_point_lon }}')
-    };
-
     // Karte initialisieren
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
@@ -162,37 +153,12 @@ function initMap() {
         ]
     });
 
-    // Start-Marker
-    new google.maps.Marker({
-        position: routeStart,
-        map: map,
-        title: 'Start: {{ route.street }} {{ route.house_numbers.split("-")[0] }}',
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#00C853',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#FFFFFF'
-        }
-    });
-
-    // End-Marker
-    new google.maps.Marker({
-        position: routeEnd,
-        map: map,
-        title: 'Ende: {{ route.street }} {{ route.house_numbers.split("-")[1] }}',
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#E3000F',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#FFFFFF'
-        }
-    });
-
     // Treffpunkt-Marker
+    const meetingPoint = {
+        lat: parseFloat('{{ route.meeting_point_lat }}'),
+        lng: parseFloat('{{ route.meeting_point_lon }}')
+    };
+    
     new google.maps.Marker({
         position: meetingPoint,
         map: map,
@@ -207,34 +173,78 @@ function initMap() {
         }
     });
 
-    // Route zeichnen
-    const routePath = new google.maps.Polyline({
-        path: [routeStart, routeEnd],
-        geodesic: true,
-        strokeColor: '#E3000F',
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-        icons: [{
-            icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 3,
-                strokeColor: '#E3000F'
-            },
-            offset: '50%'
-        }]
-    });
-    routePath.setMap(map);
+    // Geocoding für Start- und Endpunkt
+    geocoder.geocode({ address: startAddress }, function(startResults, startStatus) {
+        if (startStatus === 'OK') {
+            const startLocation = startResults[0].geometry.location;
+            
+            // Start-Marker
+            new google.maps.Marker({
+                position: startLocation,
+                map: map,
+                title: 'Start: ' + startAddress,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#00C853',
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: '#FFFFFF'
+                }
+            });
 
-    // Karte auf alle Punkte zentrieren
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend(routeStart);
-    bounds.extend(routeEnd);
-    bounds.extend(meetingPoint);
-    map.fitBounds(bounds);
+            // Geocoding für Endpunkt
+            geocoder.geocode({ address: endAddress }, function(endResults, endStatus) {
+                if (endStatus === 'OK') {
+                    const endLocation = endResults[0].geometry.location;
+                    
+                    // End-Marker
+                    new google.maps.Marker({
+                        position: endLocation,
+                        map: map,
+                        title: 'Ende: ' + endAddress,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#E3000F',
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: '#FFFFFF'
+                        }
+                    });
 
-    // Zoom-Level anpassen
-    google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
-        if (map.getZoom() > 17) map.setZoom(17);
+                    // Route zeichnen
+                    const routePath = new google.maps.Polyline({
+                        path: [startLocation, endLocation],
+                        geodesic: true,
+                        strokeColor: '#E3000F',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 3,
+                        icons: [{
+                            icon: {
+                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                scale: 3,
+                                strokeColor: '#E3000F'
+                            },
+                            offset: '50%'
+                        }]
+                    });
+                    routePath.setMap(map);
+
+                    // Karte auf alle Punkte zentrieren
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(startLocation);
+                    bounds.extend(endLocation);
+                    bounds.extend(meetingPoint);
+                    map.fitBounds(bounds);
+
+                    // Zoom-Level anpassen
+                    google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+                        if (map.getZoom() > 17) map.setZoom(17);
+                    });
+                }
+            });
+        }
     });
 }
 
