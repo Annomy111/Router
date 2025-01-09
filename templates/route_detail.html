@@ -127,30 +127,61 @@
 // Google Maps Initialisierung
 function initMap() {
     // Koordinaten aus der Route
-    const routeLocation = {
-        lat: Number('{{ route.lat }}'),
-        lng: Number('{{ route.lon }}')
+    const routeStart = {
+        lat: parseFloat('{{ route.lat }}'),
+        lng: parseFloat('{{ route.lon }}')
+    };
+    
+    // Berechne Endpunkt basierend auf Hausnummern
+    const [startNum, endNum] = '{{ route.house_numbers }}'.split('-').map(Number);
+    const distance = (endNum - startNum) * 0.00005; // Ungefährer Abstand zwischen Hausnummern
+    
+    const routeEnd = {
+        lat: routeStart.lat + (distance * 0.5),
+        lng: routeStart.lng + (distance * 0.5)
     };
     
     const meetingPoint = {
-        lat: Number('{{ route.meeting_point_lat }}'),
-        lng: Number('{{ route.meeting_point_lon }}')
+        lat: parseFloat('{{ route.meeting_point_lat }}'),
+        lng: parseFloat('{{ route.meeting_point_lon }}')
     };
 
     // Karte initialisieren
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
-        center: routeLocation,
+        center: routeStart,
         mapTypeControl: false,
         streetViewControl: true,
-        fullscreenControl: true
+        fullscreenControl: true,
+        styles: [
+            {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+            }
+        ]
     });
 
     // Start-Marker
     new google.maps.Marker({
-        position: routeLocation,
+        position: routeStart,
         map: map,
-        title: '{{ route.street }} {{ route.house_numbers }}',
+        title: 'Start: {{ route.street }} {{ route.house_numbers.split("-")[0] }}',
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#00C853',
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#FFFFFF'
+        }
+    });
+
+    // End-Marker
+    new google.maps.Marker({
+        position: routeEnd,
+        map: map,
+        title: 'Ende: {{ route.street }} {{ route.house_numbers.split("-")[1] }}',
         icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
@@ -178,19 +209,33 @@ function initMap() {
 
     // Route zeichnen
     const routePath = new google.maps.Polyline({
-        path: [routeLocation, meetingPoint],
+        path: [routeStart, routeEnd],
         geodesic: true,
         strokeColor: '#E3000F',
         strokeOpacity: 1.0,
-        strokeWeight: 3
+        strokeWeight: 3,
+        icons: [{
+            icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 3,
+                strokeColor: '#E3000F'
+            },
+            offset: '50%'
+        }]
     });
     routePath.setMap(map);
 
-    // Karte auf beide Marker zentrieren
+    // Karte auf alle Punkte zentrieren
     const bounds = new google.maps.LatLngBounds();
-    bounds.extend(routeLocation);
+    bounds.extend(routeStart);
+    bounds.extend(routeEnd);
     bounds.extend(meetingPoint);
     map.fitBounds(bounds);
+
+    // Zoom-Level anpassen
+    google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+        if (map.getZoom() > 17) map.setZoom(17);
+    });
 }
 
 // Formular-Handling
