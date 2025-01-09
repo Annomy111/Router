@@ -126,184 +126,61 @@
 <script>
 // Google Maps Initialisierung
 async function initMap() {
+    // Koordinaten aus der Route
+    const routeLocation = {
+        lat: {{ route.lat }},
+        lng: {{ route.lon }}
+    };
+    
+    const meetingPoint = {
+        lat: {{ route.meeting_point_lat }},
+        lng: {{ route.meeting_point_lon }}
+    };
+
+    // Karte initialisieren
     const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 18,
-        center: {lat: {{ route.lat }}, lng: {{ route.lon }}},
+        zoom: 17,
+        center: routeLocation,
         mapTypeControl: false,
         streetViewControl: true,
-        fullscreenControl: true,
-        styles: [
-            {
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }]
-            },
-            {
-                featureType: "transit",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }]
-            }
-        ],
-        gestureHandling: 'greedy',
-        mapTypeId: 'roadmap'
+        fullscreenControl: true
     });
 
-    // InfoWindow für Details
-    const infoWindow = new google.maps.InfoWindow();
-
-    // Event-Handler für Marker
-    function createMarkerClickHandler(marker, content) {
-        marker.addListener('click', () => {
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
-        });
-        
-        marker.addListener('mouseover', () => {
-            marker.setAnimation(google.maps.Animation.BOUNCE);
-            setTimeout(() => marker.setAnimation(null), 750);
-        });
-    }
-
-    // Start-Position
-    const startAddress = `{{ route.street }} {{ route.house_numbers.split('-')[0] }}, {{ route.zip_code }} {{ route.city }}`;
-    const endAddress = `{{ route.street }} {{ route.house_numbers.split('-')[1] }}, {{ route.zip_code }} {{ route.city }}`;
-    
-    const geocoder = new google.maps.Geocoder();
-    
-    try {
-        // Start-Marker
-        const startResult = await geocoder.geocode({ address: startAddress });
-        const startLocation = startResult.results[0].geometry.location;
-        
-        const startMarker = new google.maps.Marker({
-            position: startLocation,
-            map: map,
-            title: startAddress,
-            icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-            }
-        });
-        createMarkerClickHandler(startMarker, `
-            <div class="p-2">
-                <h6 class="mb-1">Startpunkt</h6>
-                <p class="mb-0">${startAddress}</p>
-                <small class="text-muted">Hausnummer ${route.house_numbers.split('-')[0]}</small>
-            </div>
-        `);
-
-        // End-Marker
-        const endResult = await geocoder.geocode({ address: endAddress });
-        const endLocation = endResult.results[0].geometry.location;
-        
-        const endMarker = new google.maps.Marker({
-            position: endLocation,
-            map: map,
-            title: endAddress,
-            icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-            }
-        });
-        createMarkerClickHandler(endMarker, `
-            <div class="p-2">
-                <h6 class="mb-1">Endpunkt</h6>
-                <p class="mb-0">${endAddress}</p>
-                <small class="text-muted">Hausnummer ${route.house_numbers.split('-')[1]}</small>
-            </div>
-        `);
-
-        // Treffpunkt-Marker
-        const meetingPoint = new google.maps.LatLng(
-            {{ route.meeting_point_lat }}, 
-            {{ route.meeting_point_lon }}
-        );
-        
-        const meetingPointMarker = new google.maps.Marker({
-            position: meetingPoint,
-            map: map,
-            title: '{{ route.meeting_point }}',
-            icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-            }
-        });
-        createMarkerClickHandler(meetingPointMarker, `
-            <div class="p-2">
-                <h6 class="mb-1">Treffpunkt</h6>
-                <p class="mb-0">{{ route.meeting_point }}</p>
-                <small class="text-muted">Bitte 5 Minuten vor Beginn hier einfinden</small>
-            </div>
-        `);
-
-        // Route zeichnen
-        const routePath = new google.maps.Polyline({
-            path: [startLocation, endLocation],
-            geodesic: true,
-            strokeColor: '#E3000F',
-            strokeOpacity: 1.0,
-            strokeWeight: 3,
-            icons: [{
-                icon: {
-                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                    scale: 3,
-                    strokeColor: '#E3000F'
-                },
-                offset: '50%'
-            }]
-        });
-        routePath.setMap(map);
-
-        // Wegpunkte hinzufügen
-        const steps = 4; // Anzahl der Zwischenpunkte
-        for (let i = 1; i < steps; i++) {
-            const point = google.maps.geometry.spherical.interpolate(
-                startLocation,
-                endLocation,
-                i / steps
-            );
-            new google.maps.Marker({
-                position: point,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 4,
-                    fillColor: '#E3000F',
-                    fillOpacity: 0.8,
-                    strokeWeight: 1,
-                    strokeColor: '#FFFFFF'
-                }
-            });
+    // Start-Marker
+    new google.maps.Marker({
+        position: routeLocation,
+        map: map,
+        title: '{{ route.street }} {{ route.house_numbers }}',
+        icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
         }
+    });
 
-        // Karte auf alle Marker zentrieren mit zusätzlichem Padding
-        const bounds = new google.maps.LatLngBounds();
-        bounds.extend(startLocation);
-        bounds.extend(endLocation);
-        bounds.extend(meetingPoint);
-        map.fitBounds(bounds);
-        
-        // Zoom-Level nach dem Fit anpassen
-        google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
-            if (map.getZoom() > 18) map.setZoom(18);
-            if (map.getZoom() < 16) map.setZoom(16);
-        });
-        
-    } catch (error) {
-        console.error('Geocoding error:', error);
-        // Fallback: Zeige zumindest den Treffpunkt
-        const meetingPoint = new google.maps.LatLng(
-            {{ route.meeting_point_lat }}, 
-            {{ route.meeting_point_lon }}
-        );
-        map.setCenter(meetingPoint);
-        map.setZoom(17);
-        new google.maps.Marker({
-            position: meetingPoint,
-            map: map,
-            title: '{{ route.meeting_point }}',
-            icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-            }
-        });
-    }
+    // Treffpunkt-Marker
+    new google.maps.Marker({
+        position: meetingPoint,
+        map: map,
+        title: '{{ route.meeting_point }}',
+        icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        }
+    });
+
+    // Route zeichnen
+    const routePath = new google.maps.Polyline({
+        path: [routeLocation, meetingPoint],
+        geodesic: true,
+        strokeColor: '#E3000F',
+        strokeOpacity: 1.0,
+        strokeWeight: 3
+    });
+    routePath.setMap(map);
+
+    // Karte auf beide Marker zentrieren
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(routeLocation);
+    bounds.extend(meetingPoint);
+    map.fitBounds(bounds);
 }
 
 // Formular-Handling
