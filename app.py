@@ -14,10 +14,14 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from backup_db import backup_database, restore_database
 import atexit
+from dotenv import load_dotenv
+
+# Lade Umgebungsvariablen
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dein-geheimer-schluessel')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neue_daten.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres.bzqlsaioxqrpcixvdnoo:toCjoz-mockys-gecze8@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAPBOX_TOKEN'] = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1Ijoid2luemVuZHd5ZXJzIiwiYSI6ImNscmx3Z2FtaTBkOHYya3BpbmxnOWFxbXIifQ.qHvhs6vhn6ggAXMg8TA_8g')
 app.config['GOOGLE_MAPS_KEY'] = 'AIzaSyA80P6QZPiV5Z_dv3sSY9w3igF2XSIIgxA'
@@ -154,6 +158,11 @@ def update_registration_status(reg_id):
         return jsonify({'success': True})
     
     return jsonify({'success': False, 'error': 'Ungültiger Status'})
+
+def drop_all_tables():
+    with app.app_context():
+        db.drop_all()
+        print("Alle Tabellen wurden gelöscht")
 
 def init_db():
     with app.app_context():
