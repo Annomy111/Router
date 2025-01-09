@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Google Maps Script -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&libraries=places,geometry,drawing&callback=initMap"></script>
 
 <style>
 .info-box {

@@ -1389,7 +1389,7 @@ def add_security_headers(response):
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; "
             "connect-src 'self' https://*.googleapis.com; "
-            "frame-src 'self'; "
+            "frame-src 'self' https://calendar.google.com https://*.google.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "object-src 'none';"
         )
