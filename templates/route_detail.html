@@ -4,236 +4,181 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-6">
-            <h2>{{ route.street }} {{ route.house_numbers }}</h2>
-            <p><strong>Stadt:</strong> {{ route.city }}</p>
-            <p><strong>Bezirk:</strong> {{ route.district }}</p>
-            <p><strong>PLZ:</strong> {{ route.zip_code }}</p>
-            <p><strong>Treffpunkt:</strong> {{ route.meeting_point }}</p>
-            
-            <!-- Statistiken -->
-            <div class="stats-container mt-4">
-                <h4>Statistiken</h4>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <i class="fas fa-home"></i>
-                            <span class="stat-value">{{ route.households }}</span>
-                            <span class="stat-label">Haushalte</span>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2>{{ route.street }} {{ route.house_numbers }}</h2>
+                    <p class="lead mb-4">{{ route.city }} - {{ route.district }}</p>
+                    
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="info-box">
+                                <i class="fas fa-home"></i>
+                                <span class="value">{{ route.households }}</span>
+                                <span class="label">Haushalte</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-box">
+                                <i class="fas fa-percentage"></i>
+                                <span class="value">{{ route.rental_percentage }}%</span>
+                                <span class="label">Mietanteil</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="stat-box">
-                            <i class="fas fa-percentage"></i>
-                            <span class="stat-value">{{ route.rental_percentage }}%</span>
-                            <span class="stat-label">Mietanteil</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Registrierungsbutton -->
-            <div class="mt-4">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrationModal">
-                    Als Freiwilliger registrieren
-                </button>
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <span>{{ route.meeting_point }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            <span>ca. 2 Stunden, 2 Personen</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#registrationModal">
+                        <i class="fas fa-user-plus"></i> Jetzt registrieren
+                    </button>
+                </div>
             </div>
         </div>
         
-        <!-- Google Maps -->
         <div class="col-md-6">
-            <div id="map" style="height: 400px;"></div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div id="map" style="height: 400px;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Registrierungsformular -->
-<div class="modal fade" id="registrationModal" tabindex="-1" aria-labelledby="registrationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="registrationModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="registrationModalLabel">Als Freiwilliger registrieren</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                <h5 class="modal-title">Als Freiwilliger registrieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="registrationForm" class="needs-validation" novalidate>
-                    <!-- Schritt 1: Persönliche Daten -->
-                    <div class="wizard-step active">
-                        <h6 class="mb-3">Persönliche Daten</h6>
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required autocomplete="name">
-                            <div class="invalid-feedback">
-                                Bitte geben Sie Ihren Namen ein.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">E-Mail</label>
-                            <input type="email" class="form-control" id="email" name="email" required autocomplete="email">
-                            <div class="invalid-feedback">
-                                Bitte geben Sie eine gültige E-Mail-Adresse ein.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Telefon</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required autocomplete="tel">
-                            <div class="invalid-feedback">
-                                Bitte geben Sie Ihre Telefonnummer ein.
-                            </div>
-                        </div>
+                <form id="registrationForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" required>
                     </div>
-
-                    <!-- Schritt 2: Zeitauswahl -->
-                    <div class="wizard-step">
-                        <h6 class="mb-3">Zeitauswahl</h6>
-                        <div class="mb-3">
-                            <label for="date" class="form-label">Datum</label>
-                            <input type="date" class="form-control" id="date" name="date" required autocomplete="off">
-                            <div class="invalid-feedback">
-                                Bitte wählen Sie ein Datum aus.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="timeSlot" class="form-label">Zeitfenster</label>
-                            <select class="form-select" id="timeSlot" name="timeSlot" required autocomplete="off">
-                                <option value="">Bitte wählen...</option>
-                                <option value="morning">Vormittag (9:00 - 12:00)</option>
-                                <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
-                                <option value="evening">Abend (17:00 - 20:00)</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Bitte wählen Sie ein Zeitfenster aus.
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-Mail</label>
+                        <input type="email" class="form-control" name="email" required>
                     </div>
-
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-secondary btn-prev d-none">Zurück</button>
-                        <button type="button" class="btn btn-primary btn-next">Weiter</button>
-                        <button type="submit" class="btn btn-success d-none">Registrierung abschließen</button>
+                    <div class="mb-3">
+                        <label class="form-label">Telefon</label>
+                        <input type="tel" class="form-control" name="phone" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Datum</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Zeitfenster</label>
+                        <select class="form-select" name="timeSlot" required>
+                            <option value="">Bitte wählen...</option>
+                            <option value="morning">Vormittag (9:00 - 12:00)</option>
+                            <option value="afternoon">Nachmittag (14:00 - 17:00)</option>
+                            <option value="evening">Abend (17:00 - 20:00)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Registrierung abschließen</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Google Maps Script -->
 <script>
 function initMap() {
-    const routeLocation = { lat: {{ route.lat }}, lng: {{ route.lon }} };
-    const meetingPoint = { lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }} };
-    
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 16,
-        center: routeLocation
+        center: {lat: {{ route.lat }}, lng: {{ route.lon }}},
+        mapTypeControl: false,
+        streetViewControl: true,
+        fullscreenControl: true
     });
     
-    // Route marker
     new google.maps.Marker({
-        position: routeLocation,
+        position: {lat: {{ route.lat }}, lng: {{ route.lon }}},
         map: map,
         title: '{{ route.street }} {{ route.house_numbers }}'
     });
     
-    // Meeting point marker
     new google.maps.Marker({
-        position: meetingPoint,
+        position: {lat: {{ route.meeting_point_lat }}, lng: {{ route.meeting_point_lon }}},
         map: map,
-        title: 'Treffpunkt: {{ route.meeting_point }}',
+        title: 'Treffpunkt',
         icon: {
-            url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 6,
+            fillColor: "#E3000F",
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#ffffff"
         }
     });
 }
 </script>
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap">
-</script>
 
-<!-- Form Handling Script -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config['GOOGLE_MAPS_KEY'] }}&callback=initMap"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registrationForm');
-    const nextBtn = document.querySelector('.btn-next');
-    const prevBtn = document.querySelector('.btn-prev');
-    const submitBtn = document.querySelector('button[type="submit"]');
-    const steps = document.querySelectorAll('.wizard-step');
-    let currentStep = 0;
+document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        route_id: {{ route.id }},
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        date: formData.get('date'),
+        time_slot: formData.get('timeSlot')
+    };
 
-    function showStep(stepIndex) {
-        steps.forEach((step, index) => {
-            step.classList.toggle('active', index === stepIndex);
-        });
-        
-        prevBtn.classList.toggle('d-none', stepIndex === 0);
-        nextBtn.classList.toggle('d-none', stepIndex === steps.length - 1);
-        submitBtn.classList.toggle('d-none', stepIndex !== steps.length - 1);
-    }
-
-    nextBtn.addEventListener('click', () => {
-        if (validateCurrentStep()) {
-            currentStep++;
-            showStep(currentStep);
-        }
-    });
-
-    prevBtn.addEventListener('click', () => {
-        currentStep--;
-        showStep(currentStep);
-    });
-
-    function validateCurrentStep() {
-        const currentStepElement = steps[currentStep];
-        const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
-        let isValid = true;
-
-        inputs.forEach(input => {
-            if (!input.value) {
-                isValid = false;
-                input.classList.add('is-invalid');
-            } else {
-                input.classList.remove('is-invalid');
-            }
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
         });
 
-        return isValid;
-    }
-
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        if (!validateCurrentStep()) return;
-
-        const formData = {
-            route_id: {{ route.id }},
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            date: document.getElementById('date').value,
-            time_slot: document.getElementById('timeSlot').value
-        };
-
-        try {
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('Registrierung erfolgreich!');
-                window.location.reload();
-            } else {
-                alert('Fehler bei der Registrierung: ' + result.error);
-            }
-        } catch (error) {
-            alert('Ein Fehler ist aufgetreten: ' + error);
+        const result = await response.json();
+        if (result.success) {
+            alert('Registrierung erfolgreich!');
+            window.location.reload();
+        } else {
+            alert('Fehler: ' + result.error);
         }
-    });
+    } catch (error) {
+        alert('Fehler bei der Registrierung');
+    }
 });
 </script>
+
+<style>
+.info-box {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+.info-box .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #E3000F;
+}
+.info-box .label {
+    color: #6c757d;
+}
+</style>
 {% endblock %} 
