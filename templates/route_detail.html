@@ -137,7 +137,7 @@ function initMap() {
     const startAddress = "{{ route.street }} {{ route.house_numbers.split('-')[0] }}, {{ route.city }}";
     const endAddress = "{{ route.street }} {{ route.house_numbers.split('-')[1] }}, {{ route.city }}";
     
-    // Karte initialisieren
+    // Karte initialisieren mit angepasstem Stil
     const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 17,
         center: routeStart,
@@ -149,28 +149,23 @@ function initMap() {
                 featureType: "poi",
                 elementType: "labels",
                 stylers: [{ visibility: "off" }]
+            },
+            {
+                featureType: "transit",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+            },
+            {
+                featureType: "road",
+                elementType: "geometry",
+                stylers: [{ color: "#ffffff" }]
+            },
+            {
+                featureType: "road",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#666666" }]
             }
         ]
-    });
-
-    // Treffpunkt-Marker
-    const meetingPoint = {
-        lat: parseFloat('{{ route.meeting_point_lat }}'),
-        lng: parseFloat('{{ route.meeting_point_lon }}')
-    };
-    
-    new google.maps.Marker({
-        position: meetingPoint,
-        map: map,
-        title: '{{ route.meeting_point }}',
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#FFFFFF'
-        }
     });
 
     // Geocoding für Start- und Endpunkt
@@ -178,17 +173,17 @@ function initMap() {
         if (startStatus === 'OK') {
             const startLocation = startResults[0].geometry.location;
             
-            // Start-Marker
+            // Start/Treffpunkt-Marker mit verbessertem Design
             new google.maps.Marker({
                 position: startLocation,
                 map: map,
-                title: 'Start: ' + startAddress,
+                title: 'Treffpunkt: {{ route.meeting_point }}',
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
+                    scale: 12,
                     fillColor: '#00C853',
                     fillOpacity: 1,
-                    strokeWeight: 2,
+                    strokeWeight: 3,
                     strokeColor: '#FFFFFF'
                 }
             });
@@ -198,11 +193,11 @@ function initMap() {
                 if (endStatus === 'OK') {
                     const endLocation = endResults[0].geometry.location;
                     
-                    // End-Marker
+                    // End-Marker mit verbessertem Design
                     new google.maps.Marker({
                         position: endLocation,
                         map: map,
-                        title: 'Ende: ' + endAddress,
+                        title: 'Ende: {{ route.street }} {{ route.house_numbers.split("-")[1] }}',
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
                             scale: 10,
@@ -213,34 +208,37 @@ function initMap() {
                         }
                     });
 
-                    // Route zeichnen
+                    // Route zeichnen mit verbessertem Design
                     const routePath = new google.maps.Polyline({
                         path: [startLocation, endLocation],
                         geodesic: true,
                         strokeColor: '#E3000F',
                         strokeOpacity: 1.0,
-                        strokeWeight: 3,
+                        strokeWeight: 4,
                         icons: [{
                             icon: {
                                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                scale: 3,
-                                strokeColor: '#E3000F'
+                                scale: 4,
+                                strokeColor: '#E3000F',
+                                fillColor: '#E3000F',
+                                fillOpacity: 1
                             },
-                            offset: '50%'
+                            offset: '50%',
+                            repeat: '150px'
                         }]
                     });
                     routePath.setMap(map);
 
-                    // Karte auf alle Punkte zentrieren
+                    // Karte auf Route zentrieren
                     const bounds = new google.maps.LatLngBounds();
                     bounds.extend(startLocation);
                     bounds.extend(endLocation);
-                    bounds.extend(meetingPoint);
                     map.fitBounds(bounds);
 
-                    // Zoom-Level anpassen
+                    // Zoom-Level anpassen mit etwas mehr Padding
                     google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
                         if (map.getZoom() > 17) map.setZoom(17);
+                        map.panToBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
                     });
                 }
             });
